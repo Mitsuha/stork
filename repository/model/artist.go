@@ -1,14 +1,13 @@
 package model
 
 import (
-	"database/sql"
 	"time"
 )
 
 type Artist struct {
-	ID        int            `gorm:"column:id;primary_key"`
-	Name      string         `gorm:"column:name"`
-	Image     sql.NullString `gorm:"column:image"`
-	CreatedAt *time.Time     `gorm:"column:created_at"`
-	UpdatedAt *time.Time     `gorm:"column:updated_at"`
+	ID        int        `json:"id" gorm:"column:id;primary_key"`
+	Name      string     `json:"name" gorm:"column:name"`
+	Image     string     `json:"image" gorm:"column:image"`
+	CreatedAt *time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at"`
 }

@@ -27,6 +27,7 @@ func Run() error {
 		service := overview.New()
 
 		r.GET("/data", authentication.Auth, service.Data)
+		r.GET("/overview", authentication.Auth, service.Overview)
 	}
 
 	//engine.Any("/*any", reverseProxy.New())

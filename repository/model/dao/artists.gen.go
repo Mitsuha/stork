@@ -30,7 +30,7 @@ func newArtist(db *gorm.DB, opts ...gen.DOOption) artist {
 	_artist.ALL = field.NewAsterisk(tableName)
 	_artist.ID = field.NewInt(tableName, "id")
 	_artist.Name = field.NewString(tableName, "name")
-	_artist.Image = field.NewField(tableName, "image")
+	_artist.Image = field.NewString(tableName, "image")
 	_artist.CreatedAt = field.NewTime(tableName, "created_at")
 	_artist.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -45,7 +45,7 @@ type artist struct {
 	ALL       field.Asterisk
 	ID        field.Int
 	Name      field.String
-	Image     field.Field
+	Image     field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
 
@@ -66,7 +66,7 @@ func (a *artist) updateTableName(table string) *artist {
 	a.ALL = field.NewAsterisk(table)
 	a.ID = field.NewInt(table, "id")
 	a.Name = field.NewString(table, "name")
-	a.Image = field.NewField(table, "image")
+	a.Image = field.NewString(table, "image")
 	a.CreatedAt = field.NewTime(table, "created_at")
 	a.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -175,6 +175,7 @@ type IArtistDo interface {
 
 	FindAll() (result []*model.Artist, err error)
 	FindByID(id int) (result *model.Artist, err error)
+	MostPlayed(uid int, limit int) (result []*model.Artist, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -199,6 +200,28 @@ func (a artistDo) FindByID(id int) (result *model.Artist, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// MostPlayed SELECT @@table .*
+// FROM @@table
+// LEFT JOIN songs ON @@table .id = songs.artist_id
+// LEFT JOIN interactions ON interactions.song_id = songs.id AND interactions.user_id = @uid
+// GROUP BY artists.id, play_count, artists.name, artists.image, artists.created_at, artists.updated_at
+// ORDER BY play_count DESC
+// LIMIT @limit
+func (a artistDo) MostPlayed(uid int, limit int) (result []*model.Artist, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT artists .* FROM artists LEFT JOIN songs ON artists .id = songs.artist_id LEFT JOIN interactions ON interactions.song_id = songs.id AND interactions.user_id = ? GROUP BY artists.id, play_count, artists.name, artists.image, artists.created_at, artists.updated_at ORDER BY play_count DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

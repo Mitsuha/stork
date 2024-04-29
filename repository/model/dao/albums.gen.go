@@ -34,6 +34,11 @@ func newAlbum(db *gorm.DB, opts ...gen.DOOption) album {
 	_album.Cover = field.NewString(tableName, "cover")
 	_album.CreatedAt = field.NewTime(tableName, "created_at")
 	_album.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_album.Artist = albumBelongsToArtist{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Artist", "model.Artist"),
+	}
 
 	_album.fillFieldMap()
 
@@ -50,6 +55,7 @@ type album struct {
 	Cover     field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
+	Artist    albumBelongsToArtist
 
 	fieldMap map[string]field.Expr
 }
@@ -96,13 +102,14 @@ func (a *album) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *album) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 6)
+	a.fieldMap = make(map[string]field.Expr, 7)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["artist_id"] = a.ArtistID
 	a.fieldMap["name"] = a.Name
 	a.fieldMap["cover"] = a.Cover
 	a.fieldMap["created_at"] = a.CreatedAt
 	a.fieldMap["updated_at"] = a.UpdatedAt
+
 }
 
 func (a album) clone(db *gorm.DB) album {
@@ -113,6 +120,77 @@ func (a album) clone(db *gorm.DB) album {
 func (a album) replaceDB(db *gorm.DB) album {
 	a.albumDo.ReplaceDB(db)
 	return a
+}
+
+type albumBelongsToArtist struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a albumBelongsToArtist) Where(conds ...field.Expr) *albumBelongsToArtist {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a albumBelongsToArtist) WithContext(ctx context.Context) *albumBelongsToArtist {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a albumBelongsToArtist) Session(session *gorm.Session) *albumBelongsToArtist {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a albumBelongsToArtist) Model(m *model.Album) *albumBelongsToArtistTx {
+	return &albumBelongsToArtistTx{a.db.Model(m).Association(a.Name())}
+}
+
+type albumBelongsToArtistTx struct{ tx *gorm.Association }
+
+func (a albumBelongsToArtistTx) Find() (result *model.Artist, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a albumBelongsToArtistTx) Append(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a albumBelongsToArtistTx) Replace(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a albumBelongsToArtistTx) Delete(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a albumBelongsToArtistTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a albumBelongsToArtistTx) Count() int64 {
+	return a.tx.Count()
 }
 
 type albumDo struct{ gen.DO }
@@ -179,6 +257,8 @@ type IAlbumDo interface {
 
 	FindAll() (result []*model.Album, err error)
 	FindByID(id int) (result *model.Album, err error)
+	MostPlayed(uid int, limit int) (result []*model.Album, err error)
+	RecentlyAdded(limit int) (result []*model.Album, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -203,6 +283,43 @@ func (a albumDo) FindByID(id int) (result *model.Album, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// MostPlayed SELECT @@table .*
+//
+//	FROM @@table
+//	LEFT JOIN songs ON @@table .id = songs.album_id
+//	LEFT JOIN interactions ON songs.id = interactions.song_id AND interactions.user_id = @uid
+//	ORDER BY interactions.play_count DESC
+//	LIMIT @limit
+func (a albumDo) MostPlayed(uid int, limit int) (result []*model.Album, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT albums .* FROM albums LEFT JOIN songs ON albums .id = songs.album_id LEFT JOIN interactions ON songs.id = interactions.song_id AND interactions.user_id = ? ORDER BY interactions.play_count DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// RecentlyAdded SELECT * FROM @@table WHERE id != 0 ORDER BY created_at DESC LIMIT @limit
+func (a albumDo) RecentlyAdded(limit int) (result []*model.Album, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT * FROM albums WHERE id != 0 ORDER BY created_at DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

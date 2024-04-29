@@ -40,8 +40,30 @@ func newSongs(db *gorm.DB, opts ...gen.DOOption) songs {
 	_songs.CreatedAt = field.NewTime(tableName, "created_at")
 	_songs.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_songs.ArtistID = field.NewInt(tableName, "artist_id")
-	_songs.Year = field.NewString(tableName, "year")
+	_songs.Year = field.NewInt(tableName, "year")
 	_songs.Genre = field.NewString(tableName, "genre")
+	_songs.Interaction = songsHasOneInteraction{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Interaction", "model.Interaction"),
+	}
+
+	_songs.Album = songsBelongsToAlbum{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Album", "model.Album"),
+		Artist: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Album.Artist", "model.Artist"),
+		},
+	}
+
+	_songs.Artist = songsBelongsToArtist{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Artist", "model.Artist"),
+	}
 
 	_songs.fillFieldMap()
 
@@ -51,21 +73,26 @@ func newSongs(db *gorm.DB, opts ...gen.DOOption) songs {
 type songs struct {
 	songsDo songsDo
 
-	ALL       field.Asterisk
-	ID        field.String
-	AlbumID   field.Int
-	Title     field.String
-	Length    field.Float64
-	Track     field.Int
-	Disc      field.Int
-	Lyrics    field.String
-	Path      field.String
-	Mtime     field.Int
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	ArtistID  field.Int
-	Year      field.String
-	Genre     field.String
+	ALL         field.Asterisk
+	ID          field.String
+	AlbumID     field.Int
+	Title       field.String
+	Length      field.Float64
+	Track       field.Int
+	Disc        field.Int
+	Lyrics      field.String
+	Path        field.String
+	Mtime       field.Int
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	ArtistID    field.Int
+	Year        field.Int
+	Genre       field.String
+	Interaction songsHasOneInteraction
+
+	Album songsBelongsToAlbum
+
+	Artist songsBelongsToArtist
 
 	fieldMap map[string]field.Expr
 }
@@ -94,7 +121,7 @@ func (s *songs) updateTableName(table string) *songs {
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
 	s.ArtistID = field.NewInt(table, "artist_id")
-	s.Year = field.NewString(table, "year")
+	s.Year = field.NewInt(table, "year")
 	s.Genre = field.NewString(table, "genre")
 
 	s.fillFieldMap()
@@ -120,7 +147,7 @@ func (s *songs) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *songs) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 14)
+	s.fieldMap = make(map[string]field.Expr, 17)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["album_id"] = s.AlbumID
 	s.fieldMap["title"] = s.Title
@@ -135,6 +162,7 @@ func (s *songs) fillFieldMap() {
 	s.fieldMap["artist_id"] = s.ArtistID
 	s.fieldMap["year"] = s.Year
 	s.fieldMap["genre"] = s.Genre
+
 }
 
 func (s songs) clone(db *gorm.DB) songs {
@@ -145,6 +173,223 @@ func (s songs) clone(db *gorm.DB) songs {
 func (s songs) replaceDB(db *gorm.DB) songs {
 	s.songsDo.ReplaceDB(db)
 	return s
+}
+
+type songsHasOneInteraction struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a songsHasOneInteraction) Where(conds ...field.Expr) *songsHasOneInteraction {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a songsHasOneInteraction) WithContext(ctx context.Context) *songsHasOneInteraction {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a songsHasOneInteraction) Session(session *gorm.Session) *songsHasOneInteraction {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a songsHasOneInteraction) Model(m *model.Songs) *songsHasOneInteractionTx {
+	return &songsHasOneInteractionTx{a.db.Model(m).Association(a.Name())}
+}
+
+type songsHasOneInteractionTx struct{ tx *gorm.Association }
+
+func (a songsHasOneInteractionTx) Find() (result *model.Interaction, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a songsHasOneInteractionTx) Append(values ...*model.Interaction) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a songsHasOneInteractionTx) Replace(values ...*model.Interaction) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a songsHasOneInteractionTx) Delete(values ...*model.Interaction) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a songsHasOneInteractionTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a songsHasOneInteractionTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type songsBelongsToAlbum struct {
+	db *gorm.DB
+
+	field.RelationField
+
+	Artist struct {
+		field.RelationField
+	}
+}
+
+func (a songsBelongsToAlbum) Where(conds ...field.Expr) *songsBelongsToAlbum {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a songsBelongsToAlbum) WithContext(ctx context.Context) *songsBelongsToAlbum {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a songsBelongsToAlbum) Session(session *gorm.Session) *songsBelongsToAlbum {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a songsBelongsToAlbum) Model(m *model.Songs) *songsBelongsToAlbumTx {
+	return &songsBelongsToAlbumTx{a.db.Model(m).Association(a.Name())}
+}
+
+type songsBelongsToAlbumTx struct{ tx *gorm.Association }
+
+func (a songsBelongsToAlbumTx) Find() (result *model.Album, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a songsBelongsToAlbumTx) Append(values ...*model.Album) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a songsBelongsToAlbumTx) Replace(values ...*model.Album) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a songsBelongsToAlbumTx) Delete(values ...*model.Album) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a songsBelongsToAlbumTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a songsBelongsToAlbumTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type songsBelongsToArtist struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a songsBelongsToArtist) Where(conds ...field.Expr) *songsBelongsToArtist {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a songsBelongsToArtist) WithContext(ctx context.Context) *songsBelongsToArtist {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a songsBelongsToArtist) Session(session *gorm.Session) *songsBelongsToArtist {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a songsBelongsToArtist) Model(m *model.Songs) *songsBelongsToArtistTx {
+	return &songsBelongsToArtistTx{a.db.Model(m).Association(a.Name())}
+}
+
+type songsBelongsToArtistTx struct{ tx *gorm.Association }
+
+func (a songsBelongsToArtistTx) Find() (result *model.Artist, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a songsBelongsToArtistTx) Append(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a songsBelongsToArtistTx) Replace(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a songsBelongsToArtistTx) Delete(values ...*model.Artist) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a songsBelongsToArtistTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a songsBelongsToArtistTx) Count() int64 {
+	return a.tx.Count()
 }
 
 type songsDo struct{ gen.DO }
@@ -213,6 +458,9 @@ type ISongsDo interface {
 	FindByID(id int) (result *model.Songs, err error)
 	IdIn(ids []string) (result []*model.Songs, err error)
 	CountAndLength() (result *model.CountAndLength, err error)
+	MostPlayed(uid int, limit int) (result []*model.Songs, err error)
+	RecentlyPlayed(uid int, limit int) (result []*model.Songs, err error)
+	RecentlyAdded(uid int, limit int) (result []*model.Songs, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -264,6 +512,64 @@ func (s songsDo) CountAndLength() (result *model.CountAndLength, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String()).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// MostPlayed SELECT @@table .*, albums.name, artists.name, interactions.liked, interactions.play_count
+// FROM @@table
+// LEFT JOIN interactions ON interactions.song_id = @@table .id AND interactions.user_id = @uid
+// JOIN albums ON @@table .album_id = albums.id
+// JOIN artists ON @@table .artist_id = artists.id
+// WHERE interactions.play_count > 0
+// ORDER BY interactions.play_count DESC
+// LIMIT @limit
+func (s songsDo) MostPlayed(uid int, limit int) (result []*model.Songs, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT songs .*, albums.name, artists.name, interactions.liked, interactions.play_count FROM songs LEFT JOIN interactions ON interactions.song_id = songs .id AND interactions.user_id = ? JOIN albums ON songs .album_id = albums.id JOIN artists ON songs .artist_id = artists.id WHERE interactions.play_count > 0 ORDER BY interactions.play_count DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// RecentlyPlayed SELECT @@table .* FROM @@table
+// LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
+// ORDER BY interactions.last_played_at DESC LIMIT @limit
+func (s songsDo) RecentlyPlayed(uid int, limit int) (result []*model.Songs, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT songs .* FROM songs LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = ? ORDER BY interactions.last_played_at DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// RecentlyAdded SELECT @@table .* FROM @@table LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
+// ORDER BY songs.created_at DESC LIMIT @limit
+func (s songsDo) RecentlyAdded(uid int, limit int) (result []*model.Songs, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	params = append(params, limit)
+	generateSQL.WriteString("SELECT songs .* FROM songs LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = ? ORDER BY songs.created_at DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

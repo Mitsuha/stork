@@ -48,3 +48,52 @@ func (o *Overview) Data(ctx *gin.Context) {
 		QueueState:          WrapQueueState(state),
 	})
 }
+
+func (o *Overview) Overview(ctx *gin.Context) {
+	user := authentication.User(ctx)
+
+	albumMostPlayed, err := dao.Album.WithContext(ctx).Preload(dao.Album.Artist).MostPlayed(user.ID, 5)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	artistMostPlayed, err := dao.Artist.WithContext(ctx).MostPlayed(user.ID, 5)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	songsMostPlayed, err := dao.Songs.WithContext(ctx).MostPlayed(user.ID, 5)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	songsRecentlyPlayed, err := dao.Songs.WithContext(ctx).Preload(dao.Songs.Album, dao.Songs.Artist, dao.Songs.Interaction).RecentlyPlayed(user.ID, 7)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	albumRecentlyAdded, err := dao.Album.WithContext(ctx).Preload(dao.Album.Artist).RecentlyAdded(5)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	songRecentlyAdded, err := dao.Songs.WithContext(ctx).Preload(dao.Songs.Album, dao.Songs.Artist, dao.Songs.Interaction).RecentlyAdded(user.ID, 7)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	ctx.JSON(200, &OverviewResp{
+		MostPlayedAlbums:    WrapAlbums(albumMostPlayed),
+		MostPlayedArtists:   artistMostPlayed,
+		MostPlayedSongs:     songsMostPlayed,
+		RecentlyPlayedSongs: WrapSongs(songsRecentlyPlayed),
+		RecentlyAddedAlbums: WrapAlbums(albumRecentlyAdded),
+		RecentlyAddedSongs:  WrapSongs(songRecentlyAdded),
+	})
+}
