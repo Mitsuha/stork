@@ -5,6 +5,7 @@ import (
 	v1 "github.com/mitsuha/stork/api/v1"
 	"github.com/mitsuha/stork/pkg/authentication"
 	"github.com/mitsuha/stork/repository"
+	"github.com/mitsuha/stork/repository/model/dao"
 )
 
 type Overview struct {
@@ -18,6 +19,11 @@ func (o *Overview) Data(ctx *gin.Context) {
 	user := authentication.User(ctx)
 
 	state, err := repository.UsersQueueState(ctx, user.ID)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+	statist, err := dao.Songs.WithContext(ctx).CountAndLength()
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
@@ -37,8 +43,8 @@ func (o *Overview) Data(ctx *gin.Context) {
 		CdnURL:              "http://koel.test",
 		CurrentVersion:      "v6.12.1",
 		LatestVersion:       "v6.12.1",
-		SongCount:           0,
-		SongLength:          0,
+		SongCount:           statist.Count,
+		SongLength:          statist.Length,
 		QueueState:          WrapQueueState(state),
 	})
 }

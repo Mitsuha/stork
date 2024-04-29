@@ -20,3 +20,8 @@ type Songs struct {
 	Year      string    `json:"year" gorm:"column:year"`
 	Genre     string    `json:"genre" gorm:"column:genre"`
 }
+
+type CountAndLength struct {
+	Count  int     `json:"count"`
+	Length float64 `json:"length"`
+}

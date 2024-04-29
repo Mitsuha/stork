@@ -32,14 +32,14 @@ func newSongs(db *gorm.DB, opts ...gen.DOOption) songs {
 	_songs.AlbumID = field.NewInt(tableName, "album_id")
 	_songs.Title = field.NewString(tableName, "title")
 	_songs.Length = field.NewFloat64(tableName, "length")
-	_songs.Track = field.NewField(tableName, "track")
+	_songs.Track = field.NewInt(tableName, "track")
 	_songs.Disc = field.NewInt(tableName, "disc")
 	_songs.Lyrics = field.NewString(tableName, "lyrics")
 	_songs.Path = field.NewString(tableName, "path")
 	_songs.Mtime = field.NewInt(tableName, "mtime")
 	_songs.CreatedAt = field.NewTime(tableName, "created_at")
 	_songs.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_songs.ArtistID = field.NewField(tableName, "artist_id")
+	_songs.ArtistID = field.NewInt(tableName, "artist_id")
 	_songs.Year = field.NewString(tableName, "year")
 	_songs.Genre = field.NewString(tableName, "genre")
 
@@ -56,14 +56,14 @@ type songs struct {
 	AlbumID   field.Int
 	Title     field.String
 	Length    field.Float64
-	Track     field.Field
+	Track     field.Int
 	Disc      field.Int
 	Lyrics    field.String
 	Path      field.String
 	Mtime     field.Int
 	CreatedAt field.Time
 	UpdatedAt field.Time
-	ArtistID  field.Field
+	ArtistID  field.Int
 	Year      field.String
 	Genre     field.String
 
@@ -86,14 +86,14 @@ func (s *songs) updateTableName(table string) *songs {
 	s.AlbumID = field.NewInt(table, "album_id")
 	s.Title = field.NewString(table, "title")
 	s.Length = field.NewFloat64(table, "length")
-	s.Track = field.NewField(table, "track")
+	s.Track = field.NewInt(table, "track")
 	s.Disc = field.NewInt(table, "disc")
 	s.Lyrics = field.NewString(table, "lyrics")
 	s.Path = field.NewString(table, "path")
 	s.Mtime = field.NewInt(table, "mtime")
 	s.CreatedAt = field.NewTime(table, "created_at")
 	s.UpdatedAt = field.NewTime(table, "updated_at")
-	s.ArtistID = field.NewField(table, "artist_id")
+	s.ArtistID = field.NewInt(table, "artist_id")
 	s.Year = field.NewString(table, "year")
 	s.Genre = field.NewString(table, "genre")
 
@@ -212,6 +212,7 @@ type ISongsDo interface {
 	FindAll() (result []*model.Songs, err error)
 	FindByID(id int) (result *model.Songs, err error)
 	IdIn(ids []string) (result []*model.Songs, err error)
+	CountAndLength() (result *model.CountAndLength, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -251,6 +252,18 @@ func (s songsDo) IdIn(ids []string) (result []*model.Songs, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// CountAndLength SELECT COUNT(*) AS count, SUM(length) AS length FROM @@table
+func (s songsDo) CountAndLength() (result *model.CountAndLength, err error) {
+	var generateSQL strings.Builder
+	generateSQL.WriteString("SELECT COUNT(*) AS count, SUM(length) AS length FROM songs ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String()).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

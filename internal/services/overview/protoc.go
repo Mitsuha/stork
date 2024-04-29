@@ -20,10 +20,11 @@ type DataResponse struct {
 	CurrentVersion      string          `json:"current_version"`
 	LatestVersion       string          `json:"latest_version"`
 	SongCount           int             `json:"song_count"`
-	SongLength          int             `json:"song_length"`
+	SongLength          float64         `json:"song_length"`
 	QueueState          *QueueStateResp `json:"queue_state"`
 }
 
+// UserResp todo:: check if the type field is really needed
 type UserResp struct {
 	Avatar      string      `json:"avatar"`
 	Email       string      `json:"email"`
@@ -44,7 +45,7 @@ func WrapUser(user *model.User) *UserResp {
 		IsProspect:  false,
 		Name:        user.Name,
 		Preferences: Preferences{LastFmSessionKey: ""},
-		Type:        "user",
+		Type:        "users",
 	}
 }
 
@@ -60,6 +61,6 @@ type QueueStateResp struct {
 func WrapQueueState(state *repository.QueueStateRepo) *QueueStateResp {
 	return &QueueStateResp{
 		QueueStateRepo: state,
-		Type:           "queue_state",
+		Type:           "queue-states",
 	}
 }

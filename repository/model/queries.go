@@ -33,6 +33,9 @@ type TokenQueries interface {
 type SongQueries interface {
 	//IdIn SELECT * FROM @@table WHERE id IN (@ids)
 	IdIn(ids []string) ([]*gen.T, error)
+
+	//CountAndLength SELECT COUNT(*) AS count, SUM(length) AS length FROM @@table
+	CountAndLength() (*CountAndLength, error)
 }
 
 type QueueStateQueries interface {

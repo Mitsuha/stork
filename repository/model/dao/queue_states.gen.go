@@ -31,7 +31,7 @@ func newQueueState(db *gorm.DB, opts ...gen.DOOption) queueState {
 	_queueState.ID = field.NewInt(tableName, "id")
 	_queueState.UserID = field.NewInt(tableName, "user_id")
 	_queueState.SongIds = field.NewField(tableName, "song_ids")
-	_queueState.CurrentSongID = field.NewField(tableName, "current_song_id")
+	_queueState.CurrentSongID = field.NewString(tableName, "current_song_id")
 	_queueState.PlaybackPosition = field.NewInt(tableName, "playback_position")
 	_queueState.CreatedAt = field.NewTime(tableName, "created_at")
 	_queueState.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -48,7 +48,7 @@ type queueState struct {
 	ID               field.Int
 	UserID           field.Int
 	SongIds          field.Field
-	CurrentSongID    field.Field
+	CurrentSongID    field.String
 	PlaybackPosition field.Int
 	CreatedAt        field.Time
 	UpdatedAt        field.Time
@@ -71,7 +71,7 @@ func (q *queueState) updateTableName(table string) *queueState {
 	q.ID = field.NewInt(table, "id")
 	q.UserID = field.NewInt(table, "user_id")
 	q.SongIds = field.NewField(table, "song_ids")
-	q.CurrentSongID = field.NewField(table, "current_song_id")
+	q.CurrentSongID = field.NewString(table, "current_song_id")
 	q.PlaybackPosition = field.NewInt(table, "playback_position")
 	q.CreatedAt = field.NewTime(table, "created_at")
 	q.UpdatedAt = field.NewTime(table, "updated_at")
