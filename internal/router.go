@@ -6,7 +6,6 @@ import (
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/reverseProxy"
 	"github.com/mitsuha/stork/pkg/authentication"
-
 	"time"
 )
 
@@ -22,15 +21,13 @@ func Run() error {
 		MaxAge:           12 * time.Hour,
 	})
 
-	r := engine.Group("/api").Use(c)
+	r := engine.Group("/api").Use(c, authentication.Auth)
 	{
 		service := overview.New()
 
-		r.GET("/data", authentication.Auth, service.Data)
-		r.GET("/overview", authentication.Auth, service.Overview)
+		r.GET("/data", service.Data)
+		r.GET("/overview", service.Overview)
 	}
-
-	//engine.Any("/*any", reverseProxy.New())
 
 	engine.NoRoute(reverseProxy.New())
 
