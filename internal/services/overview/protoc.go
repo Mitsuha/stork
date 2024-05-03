@@ -115,9 +115,15 @@ type SongWrap struct {
 func WrapSongs(songs []*model.Songs) []*SongWrap {
 	var result []*SongWrap
 	for _, song := range songs {
+		liked, playCount := false, 0
+		if song.Interaction != nil {
+			liked = song.Interaction.Liked
+			playCount = song.Interaction.PlayCount
+		}
+
 		result = append(result, &SongWrap{
 			AlbumArtistID:   song.Album.ArtistID,
-			AlbumArtistName: song.Album.Artist.Name,
+			AlbumArtistName: song.Artist.Name,
 			AlbumCover:      song.Album.Cover,
 			AlbumID:         song.AlbumID,
 			AlbumName:       song.Album.Name,
@@ -128,9 +134,9 @@ func WrapSongs(songs []*model.Songs) []*SongWrap {
 			Genre:           song.Genre,
 			ID:              song.ID,
 			Length:          song.Length,
-			Liked:           song.Interaction.Liked,
+			Liked:           liked,
 			Lyrics:          song.Lyrics,
-			PlayCount:       song.Interaction.PlayCount,
+			PlayCount:       playCount,
 			Title:           song.Title,
 			Track:           song.Track,
 			Year:            song.Year,
