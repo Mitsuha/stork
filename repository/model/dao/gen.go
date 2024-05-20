@@ -22,7 +22,7 @@ var (
 	PersonalAccessToken *personalAccessToken
 	QueueState          *queueState
 	Setting             *setting
-	Songs               *songs
+	Song                *song
 	User                *user
 )
 
@@ -33,7 +33,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	PersonalAccessToken = &Q.PersonalAccessToken
 	QueueState = &Q.QueueState
 	Setting = &Q.Setting
-	Songs = &Q.Songs
+	Song = &Q.Song
 	User = &Q.User
 }
 
@@ -45,7 +45,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		PersonalAccessToken: newPersonalAccessToken(db, opts...),
 		QueueState:          newQueueState(db, opts...),
 		Setting:             newSetting(db, opts...),
-		Songs:               newSongs(db, opts...),
+		Song:                newSong(db, opts...),
 		User:                newUser(db, opts...),
 	}
 }
@@ -58,7 +58,7 @@ type Query struct {
 	PersonalAccessToken personalAccessToken
 	QueueState          queueState
 	Setting             setting
-	Songs               songs
+	Song                song
 	User                user
 }
 
@@ -72,7 +72,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		PersonalAccessToken: q.PersonalAccessToken.clone(db),
 		QueueState:          q.QueueState.clone(db),
 		Setting:             q.Setting.clone(db),
-		Songs:               q.Songs.clone(db),
+		Song:                q.Song.clone(db),
 		User:                q.User.clone(db),
 	}
 }
@@ -93,7 +93,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		PersonalAccessToken: q.PersonalAccessToken.replaceDB(db),
 		QueueState:          q.QueueState.replaceDB(db),
 		Setting:             q.Setting.replaceDB(db),
-		Songs:               q.Songs.replaceDB(db),
+		Song:                q.Song.replaceDB(db),
 		User:                q.User.replaceDB(db),
 	}
 }
@@ -104,7 +104,7 @@ type queryCtx struct {
 	PersonalAccessToken IPersonalAccessTokenDo
 	QueueState          IQueueStateDo
 	Setting             ISettingDo
-	Songs               ISongsDo
+	Song                ISongDo
 	User                IUserDo
 }
 
@@ -115,7 +115,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		PersonalAccessToken: q.PersonalAccessToken.WithContext(ctx),
 		QueueState:          q.QueueState.WithContext(ctx),
 		Setting:             q.Setting.WithContext(ctx),
-		Songs:               q.Songs.WithContext(ctx),
+		Song:                q.Song.WithContext(ctx),
 		User:                q.User.WithContext(ctx),
 	}
 }

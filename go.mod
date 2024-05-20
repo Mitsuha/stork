@@ -3,9 +3,12 @@ module github.com/mitsuha/stork
 go 1.20
 
 require (
+	github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8
 	github.com/gin-contrib/cors v1.7.1
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-playground/validator/v10 v10.19.0
 	github.com/goccy/go-json v0.10.2
+	github.com/google/uuid v1.6.0
 	golang.org/x/crypto v0.22.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.6
@@ -23,7 +26,6 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.19.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
