@@ -23,7 +23,7 @@ func (o *Overview) Data(ctx *gin.Context) {
 		ctx.JSON(500, v1.ServerError)
 		return
 	}
-	statist, err := dao.Songs.WithContext(ctx).CountAndLength()
+	statist, err := dao.Song.WithContext(ctx).CountAndLength()
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
@@ -64,13 +64,13 @@ func (o *Overview) Overview(ctx *gin.Context) {
 		return
 	}
 
-	songsMostPlayed, err := dao.Songs.WithContext(ctx).MostPlayed(user.ID, 5)
+	songsMostPlayed, err := dao.Song.WithContext(ctx).MostPlayed(user.ID, 5)
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
 	}
 
-	songsRecentlyPlayed, err := dao.Songs.WithContext(ctx).Preload(dao.Songs.Album, dao.Songs.Artist, dao.Songs.Interaction).RecentlyPlayed(user.ID, 7)
+	songsRecentlyPlayed, err := dao.Song.WithContext(ctx).Preload(dao.Song.Album, dao.Song.Artist, dao.Song.Interaction).RecentlyPlayed(user.ID, 7)
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
@@ -82,7 +82,7 @@ func (o *Overview) Overview(ctx *gin.Context) {
 		return
 	}
 
-	songRecentlyAdded, err := dao.Songs.WithContext(ctx).Preload(dao.Songs.Album, dao.Songs.Artist, dao.Songs.Interaction).RecentlyAdded(user.ID, 7)
+	songRecentlyAdded, err := dao.Song.WithContext(ctx).Preload(dao.Song.Album, dao.Song.Artist, dao.Song.Interaction).RecentlyAdded(user.ID, 7)
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return

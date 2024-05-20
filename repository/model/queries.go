@@ -4,7 +4,7 @@ import "gorm.io/gen"
 
 func ApplyQueries(g *gen.Generator) {
 	var tables = []any{
-		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, Songs{}, QueueState{},
+		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, Song{}, QueueState{},
 	}
 	g.ApplyBasic(tables...)
 
@@ -16,7 +16,7 @@ func ApplyQueries(g *gen.Generator) {
 
 	g.ApplyInterface(func(AlbumQueries) {}, Album{})
 
-	g.ApplyInterface(func(SongQueries) {}, Songs{})
+	g.ApplyInterface(func(SongQueries) {}, Song{})
 
 	g.ApplyInterface(func(QueueStateQueries) {}, QueueState{})
 }

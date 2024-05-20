@@ -68,7 +68,7 @@ func WrapQueueState(state *repository.QueueStateRepo) *QueueStateResp {
 type OverviewResp struct {
 	MostPlayedAlbums    []*AlbumWrap    `json:"most_played_albums"`
 	MostPlayedArtists   []*model.Artist `json:"most_played_artists"`
-	MostPlayedSongs     []*model.Songs  `json:"most_played_songs"`
+	MostPlayedSongs     []*model.Song   `json:"most_played_songs"`
 	RecentlyAddedAlbums []*AlbumWrap    `json:"recently_added_albums"`
 	RecentlyAddedSongs  []*SongWrap     `json:"recently_added_songs"`
 	RecentlyPlayedSongs []*SongWrap     `json:"recently_played_songs"`
@@ -82,12 +82,16 @@ type AlbumWrap struct {
 func WrapAlbums(albums []*model.Album) []*AlbumWrap {
 	var result []*AlbumWrap
 	for _, album := range albums {
-		result = append(result, &AlbumWrap{
-			Album:      album,
-			ArtistName: album.Artist.Name,
-		})
+		result = append(result, WrapAlbum(album))
 	}
 	return result
+}
+
+func WrapAlbum(album *model.Album) *AlbumWrap {
+	return &AlbumWrap{
+		Album:      album,
+		ArtistName: album.Artist.Name,
+	}
 }
 
 type SongWrap struct {
@@ -112,35 +116,39 @@ type SongWrap struct {
 	Year            int     `json:"year"`
 }
 
-func WrapSongs(songs []*model.Songs) []*SongWrap {
+func WrapSongs(songs []*model.Song) []*SongWrap {
 	var result []*SongWrap
 	for _, song := range songs {
-		liked, playCount := false, 0
-		if song.Interaction != nil {
-			liked = song.Interaction.Liked
-			playCount = song.Interaction.PlayCount
-		}
-
-		result = append(result, &SongWrap{
-			AlbumArtistID:   song.Album.ArtistID,
-			AlbumArtistName: song.Artist.Name,
-			AlbumCover:      song.Album.Cover,
-			AlbumID:         song.AlbumID,
-			AlbumName:       song.Album.Name,
-			ArtistID:        song.ArtistID,
-			ArtistName:      song.Artist.Name,
-			CreatedAt:       song.CreatedAt.String(),
-			Disc:            song.Disc,
-			Genre:           song.Genre,
-			ID:              song.ID,
-			Length:          song.Length,
-			Liked:           liked,
-			Lyrics:          song.Lyrics,
-			PlayCount:       playCount,
-			Title:           song.Title,
-			Track:           song.Track,
-			Year:            song.Year,
-		})
+		result = append(result, WrapSong(song))
 	}
 	return result
+}
+
+func WrapSong(song *model.Song) *SongWrap {
+	liked, playCount := false, 0
+	if song.Interaction != nil {
+		liked = song.Interaction.Liked
+		playCount = song.Interaction.PlayCount
+	}
+
+	return &SongWrap{
+		AlbumArtistID:   song.Album.ArtistID,
+		AlbumArtistName: song.Artist.Name,
+		AlbumCover:      song.Album.Cover,
+		AlbumID:         song.AlbumID,
+		AlbumName:       song.Album.Name,
+		ArtistID:        song.ArtistID,
+		ArtistName:      song.Artist.Name,
+		CreatedAt:       song.CreatedAt.String(),
+		Disc:            song.Disc,
+		Genre:           song.Genre,
+		ID:              song.ID,
+		Length:          song.Length,
+		Liked:           liked,
+		Lyrics:          song.Lyrics,
+		PlayCount:       playCount,
+		Title:           song.Title,
+		Track:           song.Track,
+		Year:            song.Year,
+	}
 }

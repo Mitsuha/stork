@@ -42,10 +42,10 @@ func (a *Albums) Songs(ctx *gin.Context) {
 
 	fmt.Println(req.ID)
 
-	songs, err := dao.Songs.WithContext(ctx).
-		Preload(dao.Songs.Album, dao.Songs.Artist, dao.Songs.Interaction).
-		Where(dao.Songs.AlbumID.Eq(req.ID)).
-		Order(dao.Songs.Disc, dao.Songs.Track, dao.Songs.Title).
+	songs, err := dao.Song.WithContext(ctx).
+		Preload(dao.Song.Album, dao.Song.Artist, dao.Song.Interaction).
+		Where(dao.Song.AlbumID.Eq(req.ID)).
+		Order(dao.Song.Disc, dao.Song.Track, dao.Song.Title).
 		Find()
 
 	if err != nil {

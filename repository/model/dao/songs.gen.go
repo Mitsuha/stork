@@ -20,35 +20,35 @@ import (
 	"github.com/mitsuha/stork/repository/model"
 )
 
-func newSongs(db *gorm.DB, opts ...gen.DOOption) songs {
-	_songs := songs{}
+func newSong(db *gorm.DB, opts ...gen.DOOption) song {
+	_song := song{}
 
-	_songs.songsDo.UseDB(db, opts...)
-	_songs.songsDo.UseModel(&model.Songs{})
+	_song.songDo.UseDB(db, opts...)
+	_song.songDo.UseModel(&model.Song{})
 
-	tableName := _songs.songsDo.TableName()
-	_songs.ALL = field.NewAsterisk(tableName)
-	_songs.ID = field.NewString(tableName, "id")
-	_songs.AlbumID = field.NewInt(tableName, "album_id")
-	_songs.Title = field.NewString(tableName, "title")
-	_songs.Length = field.NewFloat64(tableName, "length")
-	_songs.Track = field.NewInt(tableName, "track")
-	_songs.Disc = field.NewInt(tableName, "disc")
-	_songs.Lyrics = field.NewString(tableName, "lyrics")
-	_songs.Path = field.NewString(tableName, "path")
-	_songs.Mtime = field.NewInt(tableName, "mtime")
-	_songs.CreatedAt = field.NewTime(tableName, "created_at")
-	_songs.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_songs.ArtistID = field.NewInt(tableName, "artist_id")
-	_songs.Year = field.NewInt(tableName, "year")
-	_songs.Genre = field.NewString(tableName, "genre")
-	_songs.Interaction = songsHasOneInteraction{
+	tableName := _song.songDo.TableName()
+	_song.ALL = field.NewAsterisk(tableName)
+	_song.ID = field.NewString(tableName, "id")
+	_song.AlbumID = field.NewInt(tableName, "album_id")
+	_song.Title = field.NewString(tableName, "title")
+	_song.Length = field.NewFloat64(tableName, "length")
+	_song.Track = field.NewInt(tableName, "track")
+	_song.Disc = field.NewInt(tableName, "disc")
+	_song.Lyrics = field.NewString(tableName, "lyrics")
+	_song.Path = field.NewString(tableName, "path")
+	_song.Mtime = field.NewInt(tableName, "mtime")
+	_song.CreatedAt = field.NewTime(tableName, "created_at")
+	_song.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_song.ArtistID = field.NewInt(tableName, "artist_id")
+	_song.Year = field.NewInt(tableName, "year")
+	_song.Genre = field.NewString(tableName, "genre")
+	_song.Interaction = songHasOneInteraction{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Interaction", "model.Interaction"),
 	}
 
-	_songs.Album = songsBelongsToAlbum{
+	_song.Album = songBelongsToAlbum{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Album", "model.Album"),
@@ -59,19 +59,19 @@ func newSongs(db *gorm.DB, opts ...gen.DOOption) songs {
 		},
 	}
 
-	_songs.Artist = songsBelongsToArtist{
+	_song.Artist = songBelongsToArtist{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Artist", "model.Artist"),
 	}
 
-	_songs.fillFieldMap()
+	_song.fillFieldMap()
 
-	return _songs
+	return _song
 }
 
-type songs struct {
-	songsDo songsDo
+type song struct {
+	songDo songDo
 
 	ALL         field.Asterisk
 	ID          field.String
@@ -88,26 +88,26 @@ type songs struct {
 	ArtistID    field.Int
 	Year        field.Int
 	Genre       field.String
-	Interaction songsHasOneInteraction
+	Interaction songHasOneInteraction
 
-	Album songsBelongsToAlbum
+	Album songBelongsToAlbum
 
-	Artist songsBelongsToArtist
+	Artist songBelongsToArtist
 
 	fieldMap map[string]field.Expr
 }
 
-func (s songs) Table(newTableName string) *songs {
-	s.songsDo.UseTable(newTableName)
+func (s song) Table(newTableName string) *song {
+	s.songDo.UseTable(newTableName)
 	return s.updateTableName(newTableName)
 }
 
-func (s songs) As(alias string) *songs {
-	s.songsDo.DO = *(s.songsDo.As(alias).(*gen.DO))
+func (s song) As(alias string) *song {
+	s.songDo.DO = *(s.songDo.As(alias).(*gen.DO))
 	return s.updateTableName(alias)
 }
 
-func (s *songs) updateTableName(table string) *songs {
+func (s *song) updateTableName(table string) *song {
 	s.ALL = field.NewAsterisk(table)
 	s.ID = field.NewString(table, "id")
 	s.AlbumID = field.NewInt(table, "album_id")
@@ -129,15 +129,15 @@ func (s *songs) updateTableName(table string) *songs {
 	return s
 }
 
-func (s *songs) WithContext(ctx context.Context) ISongsDo { return s.songsDo.WithContext(ctx) }
+func (s *song) WithContext(ctx context.Context) ISongDo { return s.songDo.WithContext(ctx) }
 
-func (s songs) TableName() string { return s.songsDo.TableName() }
+func (s song) TableName() string { return s.songDo.TableName() }
 
-func (s songs) Alias() string { return s.songsDo.Alias() }
+func (s song) Alias() string { return s.songDo.Alias() }
 
-func (s songs) Columns(cols ...field.Expr) gen.Columns { return s.songsDo.Columns(cols...) }
+func (s song) Columns(cols ...field.Expr) gen.Columns { return s.songDo.Columns(cols...) }
 
-func (s *songs) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
+func (s *song) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	_f, ok := s.fieldMap[fieldName]
 	if !ok || _f == nil {
 		return nil, false
@@ -146,7 +146,7 @@ func (s *songs) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 	return _oe, ok
 }
 
-func (s *songs) fillFieldMap() {
+func (s *song) fillFieldMap() {
 	s.fieldMap = make(map[string]field.Expr, 17)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["album_id"] = s.AlbumID
@@ -165,23 +165,23 @@ func (s *songs) fillFieldMap() {
 
 }
 
-func (s songs) clone(db *gorm.DB) songs {
-	s.songsDo.ReplaceConnPool(db.Statement.ConnPool)
+func (s song) clone(db *gorm.DB) song {
+	s.songDo.ReplaceConnPool(db.Statement.ConnPool)
 	return s
 }
 
-func (s songs) replaceDB(db *gorm.DB) songs {
-	s.songsDo.ReplaceDB(db)
+func (s song) replaceDB(db *gorm.DB) song {
+	s.songDo.ReplaceDB(db)
 	return s
 }
 
-type songsHasOneInteraction struct {
+type songHasOneInteraction struct {
 	db *gorm.DB
 
 	field.RelationField
 }
 
-func (a songsHasOneInteraction) Where(conds ...field.Expr) *songsHasOneInteraction {
+func (a songHasOneInteraction) Where(conds ...field.Expr) *songHasOneInteraction {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -194,27 +194,27 @@ func (a songsHasOneInteraction) Where(conds ...field.Expr) *songsHasOneInteracti
 	return &a
 }
 
-func (a songsHasOneInteraction) WithContext(ctx context.Context) *songsHasOneInteraction {
+func (a songHasOneInteraction) WithContext(ctx context.Context) *songHasOneInteraction {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a songsHasOneInteraction) Session(session *gorm.Session) *songsHasOneInteraction {
+func (a songHasOneInteraction) Session(session *gorm.Session) *songHasOneInteraction {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a songsHasOneInteraction) Model(m *model.Songs) *songsHasOneInteractionTx {
-	return &songsHasOneInteractionTx{a.db.Model(m).Association(a.Name())}
+func (a songHasOneInteraction) Model(m *model.Song) *songHasOneInteractionTx {
+	return &songHasOneInteractionTx{a.db.Model(m).Association(a.Name())}
 }
 
-type songsHasOneInteractionTx struct{ tx *gorm.Association }
+type songHasOneInteractionTx struct{ tx *gorm.Association }
 
-func (a songsHasOneInteractionTx) Find() (result *model.Interaction, err error) {
+func (a songHasOneInteractionTx) Find() (result *model.Interaction, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a songsHasOneInteractionTx) Append(values ...*model.Interaction) (err error) {
+func (a songHasOneInteractionTx) Append(values ...*model.Interaction) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -222,7 +222,7 @@ func (a songsHasOneInteractionTx) Append(values ...*model.Interaction) (err erro
 	return a.tx.Append(targetValues...)
 }
 
-func (a songsHasOneInteractionTx) Replace(values ...*model.Interaction) (err error) {
+func (a songHasOneInteractionTx) Replace(values ...*model.Interaction) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -230,7 +230,7 @@ func (a songsHasOneInteractionTx) Replace(values ...*model.Interaction) (err err
 	return a.tx.Replace(targetValues...)
 }
 
-func (a songsHasOneInteractionTx) Delete(values ...*model.Interaction) (err error) {
+func (a songHasOneInteractionTx) Delete(values ...*model.Interaction) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -238,15 +238,15 @@ func (a songsHasOneInteractionTx) Delete(values ...*model.Interaction) (err erro
 	return a.tx.Delete(targetValues...)
 }
 
-func (a songsHasOneInteractionTx) Clear() error {
+func (a songHasOneInteractionTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a songsHasOneInteractionTx) Count() int64 {
+func (a songHasOneInteractionTx) Count() int64 {
 	return a.tx.Count()
 }
 
-type songsBelongsToAlbum struct {
+type songBelongsToAlbum struct {
 	db *gorm.DB
 
 	field.RelationField
@@ -256,7 +256,7 @@ type songsBelongsToAlbum struct {
 	}
 }
 
-func (a songsBelongsToAlbum) Where(conds ...field.Expr) *songsBelongsToAlbum {
+func (a songBelongsToAlbum) Where(conds ...field.Expr) *songBelongsToAlbum {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -269,27 +269,27 @@ func (a songsBelongsToAlbum) Where(conds ...field.Expr) *songsBelongsToAlbum {
 	return &a
 }
 
-func (a songsBelongsToAlbum) WithContext(ctx context.Context) *songsBelongsToAlbum {
+func (a songBelongsToAlbum) WithContext(ctx context.Context) *songBelongsToAlbum {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a songsBelongsToAlbum) Session(session *gorm.Session) *songsBelongsToAlbum {
+func (a songBelongsToAlbum) Session(session *gorm.Session) *songBelongsToAlbum {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a songsBelongsToAlbum) Model(m *model.Songs) *songsBelongsToAlbumTx {
-	return &songsBelongsToAlbumTx{a.db.Model(m).Association(a.Name())}
+func (a songBelongsToAlbum) Model(m *model.Song) *songBelongsToAlbumTx {
+	return &songBelongsToAlbumTx{a.db.Model(m).Association(a.Name())}
 }
 
-type songsBelongsToAlbumTx struct{ tx *gorm.Association }
+type songBelongsToAlbumTx struct{ tx *gorm.Association }
 
-func (a songsBelongsToAlbumTx) Find() (result *model.Album, err error) {
+func (a songBelongsToAlbumTx) Find() (result *model.Album, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a songsBelongsToAlbumTx) Append(values ...*model.Album) (err error) {
+func (a songBelongsToAlbumTx) Append(values ...*model.Album) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -297,7 +297,7 @@ func (a songsBelongsToAlbumTx) Append(values ...*model.Album) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a songsBelongsToAlbumTx) Replace(values ...*model.Album) (err error) {
+func (a songBelongsToAlbumTx) Replace(values ...*model.Album) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -305,7 +305,7 @@ func (a songsBelongsToAlbumTx) Replace(values ...*model.Album) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a songsBelongsToAlbumTx) Delete(values ...*model.Album) (err error) {
+func (a songBelongsToAlbumTx) Delete(values ...*model.Album) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -313,21 +313,21 @@ func (a songsBelongsToAlbumTx) Delete(values ...*model.Album) (err error) {
 	return a.tx.Delete(targetValues...)
 }
 
-func (a songsBelongsToAlbumTx) Clear() error {
+func (a songBelongsToAlbumTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a songsBelongsToAlbumTx) Count() int64 {
+func (a songBelongsToAlbumTx) Count() int64 {
 	return a.tx.Count()
 }
 
-type songsBelongsToArtist struct {
+type songBelongsToArtist struct {
 	db *gorm.DB
 
 	field.RelationField
 }
 
-func (a songsBelongsToArtist) Where(conds ...field.Expr) *songsBelongsToArtist {
+func (a songBelongsToArtist) Where(conds ...field.Expr) *songBelongsToArtist {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -340,27 +340,27 @@ func (a songsBelongsToArtist) Where(conds ...field.Expr) *songsBelongsToArtist {
 	return &a
 }
 
-func (a songsBelongsToArtist) WithContext(ctx context.Context) *songsBelongsToArtist {
+func (a songBelongsToArtist) WithContext(ctx context.Context) *songBelongsToArtist {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a songsBelongsToArtist) Session(session *gorm.Session) *songsBelongsToArtist {
+func (a songBelongsToArtist) Session(session *gorm.Session) *songBelongsToArtist {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a songsBelongsToArtist) Model(m *model.Songs) *songsBelongsToArtistTx {
-	return &songsBelongsToArtistTx{a.db.Model(m).Association(a.Name())}
+func (a songBelongsToArtist) Model(m *model.Song) *songBelongsToArtistTx {
+	return &songBelongsToArtistTx{a.db.Model(m).Association(a.Name())}
 }
 
-type songsBelongsToArtistTx struct{ tx *gorm.Association }
+type songBelongsToArtistTx struct{ tx *gorm.Association }
 
-func (a songsBelongsToArtistTx) Find() (result *model.Artist, err error) {
+func (a songBelongsToArtistTx) Find() (result *model.Artist, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a songsBelongsToArtistTx) Append(values ...*model.Artist) (err error) {
+func (a songBelongsToArtistTx) Append(values ...*model.Artist) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -368,7 +368,7 @@ func (a songsBelongsToArtistTx) Append(values ...*model.Artist) (err error) {
 	return a.tx.Append(targetValues...)
 }
 
-func (a songsBelongsToArtistTx) Replace(values ...*model.Artist) (err error) {
+func (a songBelongsToArtistTx) Replace(values ...*model.Artist) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -376,7 +376,7 @@ func (a songsBelongsToArtistTx) Replace(values ...*model.Artist) (err error) {
 	return a.tx.Replace(targetValues...)
 }
 
-func (a songsBelongsToArtistTx) Delete(values ...*model.Artist) (err error) {
+func (a songBelongsToArtistTx) Delete(values ...*model.Artist) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -384,56 +384,56 @@ func (a songsBelongsToArtistTx) Delete(values ...*model.Artist) (err error) {
 	return a.tx.Delete(targetValues...)
 }
 
-func (a songsBelongsToArtistTx) Clear() error {
+func (a songBelongsToArtistTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a songsBelongsToArtistTx) Count() int64 {
+func (a songBelongsToArtistTx) Count() int64 {
 	return a.tx.Count()
 }
 
-type songsDo struct{ gen.DO }
+type songDo struct{ gen.DO }
 
-type ISongsDo interface {
+type ISongDo interface {
 	gen.SubQuery
-	Debug() ISongsDo
-	WithContext(ctx context.Context) ISongsDo
+	Debug() ISongDo
+	WithContext(ctx context.Context) ISongDo
 	WithResult(fc func(tx gen.Dao)) gen.ResultInfo
 	ReplaceDB(db *gorm.DB)
-	ReadDB() ISongsDo
-	WriteDB() ISongsDo
+	ReadDB() ISongDo
+	WriteDB() ISongDo
 	As(alias string) gen.Dao
-	Session(config *gorm.Session) ISongsDo
+	Session(config *gorm.Session) ISongDo
 	Columns(cols ...field.Expr) gen.Columns
-	Clauses(conds ...clause.Expression) ISongsDo
-	Not(conds ...gen.Condition) ISongsDo
-	Or(conds ...gen.Condition) ISongsDo
-	Select(conds ...field.Expr) ISongsDo
-	Where(conds ...gen.Condition) ISongsDo
-	Order(conds ...field.Expr) ISongsDo
-	Distinct(cols ...field.Expr) ISongsDo
-	Omit(cols ...field.Expr) ISongsDo
-	Join(table schema.Tabler, on ...field.Expr) ISongsDo
-	LeftJoin(table schema.Tabler, on ...field.Expr) ISongsDo
-	RightJoin(table schema.Tabler, on ...field.Expr) ISongsDo
-	Group(cols ...field.Expr) ISongsDo
-	Having(conds ...gen.Condition) ISongsDo
-	Limit(limit int) ISongsDo
-	Offset(offset int) ISongsDo
+	Clauses(conds ...clause.Expression) ISongDo
+	Not(conds ...gen.Condition) ISongDo
+	Or(conds ...gen.Condition) ISongDo
+	Select(conds ...field.Expr) ISongDo
+	Where(conds ...gen.Condition) ISongDo
+	Order(conds ...field.Expr) ISongDo
+	Distinct(cols ...field.Expr) ISongDo
+	Omit(cols ...field.Expr) ISongDo
+	Join(table schema.Tabler, on ...field.Expr) ISongDo
+	LeftJoin(table schema.Tabler, on ...field.Expr) ISongDo
+	RightJoin(table schema.Tabler, on ...field.Expr) ISongDo
+	Group(cols ...field.Expr) ISongDo
+	Having(conds ...gen.Condition) ISongDo
+	Limit(limit int) ISongDo
+	Offset(offset int) ISongDo
 	Count() (count int64, err error)
-	Scopes(funcs ...func(gen.Dao) gen.Dao) ISongsDo
-	Unscoped() ISongsDo
-	Create(values ...*model.Songs) error
-	CreateInBatches(values []*model.Songs, batchSize int) error
-	Save(values ...*model.Songs) error
-	First() (*model.Songs, error)
-	Take() (*model.Songs, error)
-	Last() (*model.Songs, error)
-	Find() ([]*model.Songs, error)
-	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model.Songs, err error)
-	FindInBatches(result *[]*model.Songs, batchSize int, fc func(tx gen.Dao, batch int) error) error
+	Scopes(funcs ...func(gen.Dao) gen.Dao) ISongDo
+	Unscoped() ISongDo
+	Create(values ...*model.Song) error
+	CreateInBatches(values []*model.Song, batchSize int) error
+	Save(values ...*model.Song) error
+	First() (*model.Song, error)
+	Take() (*model.Song, error)
+	Last() (*model.Song, error)
+	Find() ([]*model.Song, error)
+	FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model.Song, err error)
+	FindInBatches(result *[]*model.Song, batchSize int, fc func(tx gen.Dao, batch int) error) error
 	Pluck(column field.Expr, dest interface{}) error
-	Delete(...*model.Songs) (info gen.ResultInfo, err error)
+	Delete(...*model.Song) (info gen.ResultInfo, err error)
 	Update(column field.Expr, value interface{}) (info gen.ResultInfo, err error)
 	UpdateSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
 	Updates(value interface{}) (info gen.ResultInfo, err error)
@@ -441,30 +441,30 @@ type ISongsDo interface {
 	UpdateColumnSimple(columns ...field.AssignExpr) (info gen.ResultInfo, err error)
 	UpdateColumns(value interface{}) (info gen.ResultInfo, err error)
 	UpdateFrom(q gen.SubQuery) gen.Dao
-	Attrs(attrs ...field.AssignExpr) ISongsDo
-	Assign(attrs ...field.AssignExpr) ISongsDo
-	Joins(fields ...field.RelationField) ISongsDo
-	Preload(fields ...field.RelationField) ISongsDo
-	FirstOrInit() (*model.Songs, error)
-	FirstOrCreate() (*model.Songs, error)
-	FindByPage(offset int, limit int) (result []*model.Songs, count int64, err error)
+	Attrs(attrs ...field.AssignExpr) ISongDo
+	Assign(attrs ...field.AssignExpr) ISongDo
+	Joins(fields ...field.RelationField) ISongDo
+	Preload(fields ...field.RelationField) ISongDo
+	FirstOrInit() (*model.Song, error)
+	FirstOrCreate() (*model.Song, error)
+	FindByPage(offset int, limit int) (result []*model.Song, count int64, err error)
 	ScanByPage(result interface{}, offset int, limit int) (count int64, err error)
 	Scan(result interface{}) (err error)
-	Returning(value interface{}, columns ...string) ISongsDo
+	Returning(value interface{}, columns ...string) ISongDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
-	FindAll() (result []*model.Songs, err error)
-	FindByID(id int) (result *model.Songs, err error)
-	IdIn(ids []string) (result []*model.Songs, err error)
+	FindAll() (result []*model.Song, err error)
+	FindByID(id int) (result *model.Song, err error)
+	IdIn(ids []string) (result []*model.Song, err error)
 	CountAndLength() (result *model.CountAndLength, err error)
-	MostPlayed(uid int, limit int) (result []*model.Songs, err error)
-	RecentlyPlayed(uid int, limit int) (result []*model.Songs, err error)
-	RecentlyAdded(uid int, limit int) (result []*model.Songs, err error)
+	MostPlayed(uid int, limit int) (result []*model.Song, err error)
+	RecentlyPlayed(uid int, limit int) (result []*model.Song, err error)
+	RecentlyAdded(uid int, limit int) (result []*model.Song, err error)
 }
 
 // FindAll SELECT * FROM @@table
-func (s songsDo) FindAll() (result []*model.Songs, err error) {
+func (s songDo) FindAll() (result []*model.Song, err error) {
 	var generateSQL strings.Builder
 	generateSQL.WriteString("SELECT * FROM songs ")
 
@@ -476,7 +476,7 @@ func (s songsDo) FindAll() (result []*model.Songs, err error) {
 }
 
 // FindByID SELECT * FROM @@table WHERE id = @id
-func (s songsDo) FindByID(id int) (result *model.Songs, err error) {
+func (s songDo) FindByID(id int) (result *model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -491,7 +491,7 @@ func (s songsDo) FindByID(id int) (result *model.Songs, err error) {
 }
 
 // IdIn SELECT * FROM @@table WHERE id IN (@ids)
-func (s songsDo) IdIn(ids []string) (result []*model.Songs, err error) {
+func (s songDo) IdIn(ids []string) (result []*model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -506,7 +506,7 @@ func (s songsDo) IdIn(ids []string) (result []*model.Songs, err error) {
 }
 
 // CountAndLength SELECT COUNT(*) AS count, SUM(length) AS length FROM @@table
-func (s songsDo) CountAndLength() (result *model.CountAndLength, err error) {
+func (s songDo) CountAndLength() (result *model.CountAndLength, err error) {
 	var generateSQL strings.Builder
 	generateSQL.WriteString("SELECT COUNT(*) AS count, SUM(length) AS length FROM songs ")
 
@@ -525,7 +525,7 @@ func (s songsDo) CountAndLength() (result *model.CountAndLength, err error) {
 // WHERE interactions.play_count > 0
 // ORDER BY interactions.play_count DESC
 // LIMIT @limit
-func (s songsDo) MostPlayed(uid int, limit int) (result []*model.Songs, err error) {
+func (s songDo) MostPlayed(uid int, limit int) (result []*model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -543,7 +543,7 @@ func (s songsDo) MostPlayed(uid int, limit int) (result []*model.Songs, err erro
 // RecentlyPlayed SELECT @@table .* FROM @@table
 // LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
 // ORDER BY interactions.last_played_at DESC LIMIT @limit
-func (s songsDo) RecentlyPlayed(uid int, limit int) (result []*model.Songs, err error) {
+func (s songDo) RecentlyPlayed(uid int, limit int) (result []*model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -560,7 +560,7 @@ func (s songsDo) RecentlyPlayed(uid int, limit int) (result []*model.Songs, err 
 
 // RecentlyAdded SELECT @@table .* FROM @@table LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
 // ORDER BY songs.created_at DESC LIMIT @limit
-func (s songsDo) RecentlyAdded(uid int, limit int) (result []*model.Songs, err error) {
+func (s songDo) RecentlyAdded(uid int, limit int) (result []*model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -575,149 +575,149 @@ func (s songsDo) RecentlyAdded(uid int, limit int) (result []*model.Songs, err e
 	return
 }
 
-func (s songsDo) Debug() ISongsDo {
+func (s songDo) Debug() ISongDo {
 	return s.withDO(s.DO.Debug())
 }
 
-func (s songsDo) WithContext(ctx context.Context) ISongsDo {
+func (s songDo) WithContext(ctx context.Context) ISongDo {
 	return s.withDO(s.DO.WithContext(ctx))
 }
 
-func (s songsDo) ReadDB() ISongsDo {
+func (s songDo) ReadDB() ISongDo {
 	return s.Clauses(dbresolver.Read)
 }
 
-func (s songsDo) WriteDB() ISongsDo {
+func (s songDo) WriteDB() ISongDo {
 	return s.Clauses(dbresolver.Write)
 }
 
-func (s songsDo) Session(config *gorm.Session) ISongsDo {
+func (s songDo) Session(config *gorm.Session) ISongDo {
 	return s.withDO(s.DO.Session(config))
 }
 
-func (s songsDo) Clauses(conds ...clause.Expression) ISongsDo {
+func (s songDo) Clauses(conds ...clause.Expression) ISongDo {
 	return s.withDO(s.DO.Clauses(conds...))
 }
 
-func (s songsDo) Returning(value interface{}, columns ...string) ISongsDo {
+func (s songDo) Returning(value interface{}, columns ...string) ISongDo {
 	return s.withDO(s.DO.Returning(value, columns...))
 }
 
-func (s songsDo) Not(conds ...gen.Condition) ISongsDo {
+func (s songDo) Not(conds ...gen.Condition) ISongDo {
 	return s.withDO(s.DO.Not(conds...))
 }
 
-func (s songsDo) Or(conds ...gen.Condition) ISongsDo {
+func (s songDo) Or(conds ...gen.Condition) ISongDo {
 	return s.withDO(s.DO.Or(conds...))
 }
 
-func (s songsDo) Select(conds ...field.Expr) ISongsDo {
+func (s songDo) Select(conds ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Select(conds...))
 }
 
-func (s songsDo) Where(conds ...gen.Condition) ISongsDo {
+func (s songDo) Where(conds ...gen.Condition) ISongDo {
 	return s.withDO(s.DO.Where(conds...))
 }
 
-func (s songsDo) Order(conds ...field.Expr) ISongsDo {
+func (s songDo) Order(conds ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Order(conds...))
 }
 
-func (s songsDo) Distinct(cols ...field.Expr) ISongsDo {
+func (s songDo) Distinct(cols ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Distinct(cols...))
 }
 
-func (s songsDo) Omit(cols ...field.Expr) ISongsDo {
+func (s songDo) Omit(cols ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Omit(cols...))
 }
 
-func (s songsDo) Join(table schema.Tabler, on ...field.Expr) ISongsDo {
+func (s songDo) Join(table schema.Tabler, on ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Join(table, on...))
 }
 
-func (s songsDo) LeftJoin(table schema.Tabler, on ...field.Expr) ISongsDo {
+func (s songDo) LeftJoin(table schema.Tabler, on ...field.Expr) ISongDo {
 	return s.withDO(s.DO.LeftJoin(table, on...))
 }
 
-func (s songsDo) RightJoin(table schema.Tabler, on ...field.Expr) ISongsDo {
+func (s songDo) RightJoin(table schema.Tabler, on ...field.Expr) ISongDo {
 	return s.withDO(s.DO.RightJoin(table, on...))
 }
 
-func (s songsDo) Group(cols ...field.Expr) ISongsDo {
+func (s songDo) Group(cols ...field.Expr) ISongDo {
 	return s.withDO(s.DO.Group(cols...))
 }
 
-func (s songsDo) Having(conds ...gen.Condition) ISongsDo {
+func (s songDo) Having(conds ...gen.Condition) ISongDo {
 	return s.withDO(s.DO.Having(conds...))
 }
 
-func (s songsDo) Limit(limit int) ISongsDo {
+func (s songDo) Limit(limit int) ISongDo {
 	return s.withDO(s.DO.Limit(limit))
 }
 
-func (s songsDo) Offset(offset int) ISongsDo {
+func (s songDo) Offset(offset int) ISongDo {
 	return s.withDO(s.DO.Offset(offset))
 }
 
-func (s songsDo) Scopes(funcs ...func(gen.Dao) gen.Dao) ISongsDo {
+func (s songDo) Scopes(funcs ...func(gen.Dao) gen.Dao) ISongDo {
 	return s.withDO(s.DO.Scopes(funcs...))
 }
 
-func (s songsDo) Unscoped() ISongsDo {
+func (s songDo) Unscoped() ISongDo {
 	return s.withDO(s.DO.Unscoped())
 }
 
-func (s songsDo) Create(values ...*model.Songs) error {
+func (s songDo) Create(values ...*model.Song) error {
 	if len(values) == 0 {
 		return nil
 	}
 	return s.DO.Create(values)
 }
 
-func (s songsDo) CreateInBatches(values []*model.Songs, batchSize int) error {
+func (s songDo) CreateInBatches(values []*model.Song, batchSize int) error {
 	return s.DO.CreateInBatches(values, batchSize)
 }
 
 // Save : !!! underlying implementation is different with GORM
 // The method is equivalent to executing the statement: db.Clauses(clause.OnConflict{UpdateAll: true}).Create(values)
-func (s songsDo) Save(values ...*model.Songs) error {
+func (s songDo) Save(values ...*model.Song) error {
 	if len(values) == 0 {
 		return nil
 	}
 	return s.DO.Save(values)
 }
 
-func (s songsDo) First() (*model.Songs, error) {
+func (s songDo) First() (*model.Song, error) {
 	if result, err := s.DO.First(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model.Songs), nil
+		return result.(*model.Song), nil
 	}
 }
 
-func (s songsDo) Take() (*model.Songs, error) {
+func (s songDo) Take() (*model.Song, error) {
 	if result, err := s.DO.Take(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model.Songs), nil
+		return result.(*model.Song), nil
 	}
 }
 
-func (s songsDo) Last() (*model.Songs, error) {
+func (s songDo) Last() (*model.Song, error) {
 	if result, err := s.DO.Last(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model.Songs), nil
+		return result.(*model.Song), nil
 	}
 }
 
-func (s songsDo) Find() ([]*model.Songs, error) {
+func (s songDo) Find() ([]*model.Song, error) {
 	result, err := s.DO.Find()
-	return result.([]*model.Songs), err
+	return result.([]*model.Song), err
 }
 
-func (s songsDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model.Songs, err error) {
-	buf := make([]*model.Songs, 0, batchSize)
+func (s songDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error) (results []*model.Song, err error) {
+	buf := make([]*model.Song, 0, batchSize)
 	err = s.DO.FindInBatches(&buf, batchSize, func(tx gen.Dao, batch int) error {
 		defer func() { results = append(results, buf...) }()
 		return fc(tx, batch)
@@ -725,49 +725,49 @@ func (s songsDo) FindInBatch(batchSize int, fc func(tx gen.Dao, batch int) error
 	return results, err
 }
 
-func (s songsDo) FindInBatches(result *[]*model.Songs, batchSize int, fc func(tx gen.Dao, batch int) error) error {
+func (s songDo) FindInBatches(result *[]*model.Song, batchSize int, fc func(tx gen.Dao, batch int) error) error {
 	return s.DO.FindInBatches(result, batchSize, fc)
 }
 
-func (s songsDo) Attrs(attrs ...field.AssignExpr) ISongsDo {
+func (s songDo) Attrs(attrs ...field.AssignExpr) ISongDo {
 	return s.withDO(s.DO.Attrs(attrs...))
 }
 
-func (s songsDo) Assign(attrs ...field.AssignExpr) ISongsDo {
+func (s songDo) Assign(attrs ...field.AssignExpr) ISongDo {
 	return s.withDO(s.DO.Assign(attrs...))
 }
 
-func (s songsDo) Joins(fields ...field.RelationField) ISongsDo {
+func (s songDo) Joins(fields ...field.RelationField) ISongDo {
 	for _, _f := range fields {
 		s = *s.withDO(s.DO.Joins(_f))
 	}
 	return &s
 }
 
-func (s songsDo) Preload(fields ...field.RelationField) ISongsDo {
+func (s songDo) Preload(fields ...field.RelationField) ISongDo {
 	for _, _f := range fields {
 		s = *s.withDO(s.DO.Preload(_f))
 	}
 	return &s
 }
 
-func (s songsDo) FirstOrInit() (*model.Songs, error) {
+func (s songDo) FirstOrInit() (*model.Song, error) {
 	if result, err := s.DO.FirstOrInit(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model.Songs), nil
+		return result.(*model.Song), nil
 	}
 }
 
-func (s songsDo) FirstOrCreate() (*model.Songs, error) {
+func (s songDo) FirstOrCreate() (*model.Song, error) {
 	if result, err := s.DO.FirstOrCreate(); err != nil {
 		return nil, err
 	} else {
-		return result.(*model.Songs), nil
+		return result.(*model.Song), nil
 	}
 }
 
-func (s songsDo) FindByPage(offset int, limit int) (result []*model.Songs, count int64, err error) {
+func (s songDo) FindByPage(offset int, limit int) (result []*model.Song, count int64, err error) {
 	result, err = s.Offset(offset).Limit(limit).Find()
 	if err != nil {
 		return
@@ -782,7 +782,7 @@ func (s songsDo) FindByPage(offset int, limit int) (result []*model.Songs, count
 	return
 }
 
-func (s songsDo) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
+func (s songDo) ScanByPage(result interface{}, offset int, limit int) (count int64, err error) {
 	count, err = s.Count()
 	if err != nil {
 		return
@@ -792,15 +792,15 @@ func (s songsDo) ScanByPage(result interface{}, offset int, limit int) (count in
 	return
 }
 
-func (s songsDo) Scan(result interface{}) (err error) {
+func (s songDo) Scan(result interface{}) (err error) {
 	return s.DO.Scan(result)
 }
 
-func (s songsDo) Delete(models ...*model.Songs) (result gen.ResultInfo, err error) {
+func (s songDo) Delete(models ...*model.Song) (result gen.ResultInfo, err error) {
 	return s.DO.Delete(models)
 }
 
-func (s *songsDo) withDO(do gen.Dao) *songsDo {
+func (s *songDo) withDO(do gen.Dao) *songDo {
 	s.DO = *do.(*gen.DO)
 	return s
 }

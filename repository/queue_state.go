@@ -8,8 +8,8 @@ import (
 
 type QueueStateRepo struct {
 	*model.QueueState `json:",inline"`
-	Songs             []*model.Songs `json:"songs"`
-	CurrentSong       *model.Songs   `json:"current_song"`
+	Songs             []*model.Song `json:"songs"`
+	CurrentSong       *model.Song   `json:"current_song"`
 }
 
 func UsersQueueState(ctx context.Context, uid int) (*QueueStateRepo, error) {
@@ -19,12 +19,12 @@ func UsersQueueState(ctx context.Context, uid int) (*QueueStateRepo, error) {
 		return nil, err
 	}
 
-	songs, err := dao.Songs.WithContext(ctx).IdIn(state.SongIds)
+	songs, err := dao.Song.WithContext(ctx).IdIn(state.SongIds)
 	if err != nil {
 		return nil, err
 	}
 
-	var currentSong *model.Songs
+	var currentSong *model.Song
 	for _, song := range songs {
 		if song.ID == state.CurrentSongID {
 			currentSong = song

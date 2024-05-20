@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Songs struct {
+type Song struct {
 	ID          string       `json:"id" gorm:"column:id;primary_key"`
 	AlbumID     int          `json:"album_id" gorm:"column:album_id"`
 	Title       string       `json:"title" gorm:"column:title"`
