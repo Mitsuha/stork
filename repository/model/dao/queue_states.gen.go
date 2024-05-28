@@ -185,6 +185,7 @@ type IQueueStateDo interface {
 
 	FindAll() (result []*model.QueueState, err error)
 	FindByID(id int) (result *model.QueueState, err error)
+	FindByUserID(uid int) (result []*model.QueueState, err error)
 	WhereUser(uid int) (result *model.QueueState, err error)
 }
 
@@ -210,6 +211,21 @@ func (q queueStateDo) FindByID(id int) (result *model.QueueState, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = q.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (q queueStateDo) FindByUserID(uid int) (result []*model.QueueState, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM queue_states WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = q.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

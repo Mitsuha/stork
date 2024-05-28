@@ -257,6 +257,7 @@ type IAlbumDo interface {
 
 	FindAll() (result []*model.Album, err error)
 	FindByID(id int) (result *model.Album, err error)
+	FindByUserID(uid int) (result []*model.Album, err error)
 	MostPlayed(uid int, limit int) (result []*model.Album, err error)
 	RecentlyAdded(limit int) (result []*model.Album, err error)
 }
@@ -283,6 +284,21 @@ func (a albumDo) FindByID(id int) (result *model.Album, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (a albumDo) FindByUserID(uid int) (result []*model.Album, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM albums WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

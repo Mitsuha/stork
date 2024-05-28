@@ -207,6 +207,7 @@ type IUserDo interface {
 
 	FindAll() (result []*model.User, err error)
 	FindByID(id int) (result *model.User, err error)
+	FindByUserID(uid int) (result []*model.User, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -231,6 +232,21 @@ func (u userDo) FindByID(id int) (result *model.User, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (u userDo) FindByUserID(uid int) (result []*model.User, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM users WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

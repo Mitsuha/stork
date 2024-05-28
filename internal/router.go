@@ -6,7 +6,9 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/mitsuha/stork/internal/services/albums"
+	"github.com/mitsuha/stork/internal/services/artists"
 	"github.com/mitsuha/stork/internal/services/overview"
+	"github.com/mitsuha/stork/internal/services/playlists"
 	"github.com/mitsuha/stork/internal/services/reverseProxy"
 	"github.com/mitsuha/stork/internal/services/songs"
 	customValidator "github.com/mitsuha/stork/internal/validator"
@@ -36,6 +38,7 @@ func Run() error {
 		r.GET("/data", service.Data)
 		r.GET("/overview", service.Overview)
 	}
+
 	{
 		service := albums.New()
 
@@ -45,9 +48,26 @@ func Run() error {
 	}
 
 	{
+		service := artists.New()
+
+		router := r.Group("/artists")
+		router.GET("/:id", service.Show)
+	}
+
+	{
 		service := songs.New()
 
-		r.POST("/upload", service.Upload)
+		router := r.Group("/songs")
+		router.GET("/favorite", service.Favorite)
+		//r.POST("/upload", service.Upload)
+	}
+
+	{
+		service := playlists.New()
+
+		r.POST("/playlists", service.Create)
+		r.GET("/playlists/:id/songs", service.Songs)
+		r.PUT("/playlists/:id", service.Update)
 	}
 
 	engine.NoRoute(reverseProxy.New())

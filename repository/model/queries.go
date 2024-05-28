@@ -4,7 +4,7 @@ import "gorm.io/gen"
 
 func ApplyQueries(g *gen.Generator) {
 	var tables = []any{
-		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, Song{}, QueueState{},
+		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, Song{}, QueueState{}, Playlist{}, PlaylistSong{},
 	}
 	g.ApplyBasic(tables...)
 
@@ -27,6 +27,9 @@ type CommonQueries interface {
 
 	// FindByID SELECT * FROM @@table WHERE id = @id
 	FindByID(id int) (*gen.T, error)
+
+	// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+	FindByUserID(uid int) ([]*gen.T, error)
 }
 
 type TokenQueries interface {
@@ -83,6 +86,13 @@ type SongQueries interface {
 	//RecentlyAdded SELECT @@table .* FROM @@table LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
 	//ORDER BY songs.created_at DESC LIMIT @limit
 	RecentlyAdded(uid int, limit int) ([]*gen.T, error)
+
+	//FindByPlaylist SELECT @@table .* FROM @@table LEFT JOIN playlist_song ON playlist_song.song_id = songs.id WHERE playlist_song.playlist_id = @pid
+	FindByPlaylist(pid int) ([]*gen.T, error)
+
+	//Favorite SELECT @@table .* FROM @@table LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
+	//AND interactions.liked = 1
+	Favorite(uid int) ([]*gen.T, error)
 }
 
 type QueueStateQueries interface {

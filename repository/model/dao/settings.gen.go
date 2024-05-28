@@ -163,6 +163,7 @@ type ISettingDo interface {
 
 	FindAll() (result []*model.Setting, err error)
 	FindByID(id int) (result *model.Setting, err error)
+	FindByUserID(uid int) (result []*model.Setting, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -187,6 +188,21 @@ func (s settingDo) FindByID(id int) (result *model.Setting, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (s settingDo) FindByUserID(uid int) (result []*model.Setting, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM settings WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

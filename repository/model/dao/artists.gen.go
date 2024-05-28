@@ -175,6 +175,7 @@ type IArtistDo interface {
 
 	FindAll() (result []*model.Artist, err error)
 	FindByID(id int) (result *model.Artist, err error)
+	FindByUserID(uid int) (result []*model.Artist, err error)
 	MostPlayed(uid int, limit int) (result []*model.Artist, err error)
 }
 
@@ -200,6 +201,21 @@ func (a artistDo) FindByID(id int) (result *model.Artist, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (a artistDo) FindByUserID(uid int) (result []*model.Artist, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM artists WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = a.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

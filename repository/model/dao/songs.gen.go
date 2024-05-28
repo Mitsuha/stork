@@ -456,11 +456,14 @@ type ISongDo interface {
 
 	FindAll() (result []*model.Song, err error)
 	FindByID(id int) (result *model.Song, err error)
+	FindByUserID(uid int) (result []*model.Song, err error)
 	IdIn(ids []string) (result []*model.Song, err error)
 	CountAndLength() (result *model.CountAndLength, err error)
 	MostPlayed(uid int, limit int) (result []*model.Song, err error)
 	RecentlyPlayed(uid int, limit int) (result []*model.Song, err error)
 	RecentlyAdded(uid int, limit int) (result []*model.Song, err error)
+	FindByPlaylist(pid int) (result []*model.Song, err error)
+	Favorite(uid int) (result []*model.Song, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -485,6 +488,21 @@ func (s songDo) FindByID(id int) (result *model.Song, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (s songDo) FindByUserID(uid int) (result []*model.Song, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM songs WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return
@@ -567,6 +585,37 @@ func (s songDo) RecentlyAdded(uid int, limit int) (result []*model.Song, err err
 	params = append(params, uid)
 	params = append(params, limit)
 	generateSQL.WriteString("SELECT songs .* FROM songs LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = ? ORDER BY songs.created_at DESC LIMIT ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByPlaylist SELECT @@table .* FROM @@table LEFT JOIN playlist_song ON playlist_song.song_id = songs.id WHERE playlist_song.playlist_id = @pid
+func (s songDo) FindByPlaylist(pid int) (result []*model.Song, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, pid)
+	generateSQL.WriteString("SELECT songs .* FROM songs LEFT JOIN playlist_song ON playlist_song.song_id = songs.id WHERE playlist_song.playlist_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// Favorite SELECT @@table .* FROM @@table LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = @uid
+// AND interactions.liked = 1
+func (s songDo) Favorite(uid int) (result []*model.Song, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT songs .* FROM songs LEFT JOIN interactions ON interactions.song_id = songs.id WHERE interactions.user_id = ? AND interactions.liked = 1 ")
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert

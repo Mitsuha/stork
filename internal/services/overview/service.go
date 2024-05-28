@@ -29,10 +29,16 @@ func (o *Overview) Data(ctx *gin.Context) {
 		return
 	}
 
+	playlists, err := dao.Playlist.WithContext(ctx).FindByUserID(user.ID)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
 	ctx.JSON(200, &DataResponse{
 		Settings:            repository.Settings(),
-		Playlists:           "",
-		PlaylistFolders:     "",
+		Playlists:           WrapPlaylist(playlists),
+		PlaylistFolders:     []string{},
 		CurrentUser:         WrapUser(user),
 		UseLastFm:           false,
 		UseSpotify:          false,
@@ -40,7 +46,7 @@ func (o *Overview) Data(ctx *gin.Context) {
 		UseITunes:           false,
 		AllowDownload:       true,
 		SupportsTranscoding: false,
-		CdnURL:              "http://koel.test",
+		CdnURL:              "http://localhost:8080/",
 		CurrentVersion:      "v6.12.1",
 		LatestVersion:       "v6.12.1",
 		SongCount:           statist.Count,

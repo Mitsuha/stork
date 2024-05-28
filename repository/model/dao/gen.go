@@ -20,6 +20,8 @@ var (
 	Album               *album
 	Artist              *artist
 	PersonalAccessToken *personalAccessToken
+	Playlist            *playlist
+	PlaylistSong        *playlistSong
 	QueueState          *queueState
 	Setting             *setting
 	Song                *song
@@ -31,6 +33,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Album = &Q.Album
 	Artist = &Q.Artist
 	PersonalAccessToken = &Q.PersonalAccessToken
+	Playlist = &Q.Playlist
+	PlaylistSong = &Q.PlaylistSong
 	QueueState = &Q.QueueState
 	Setting = &Q.Setting
 	Song = &Q.Song
@@ -43,6 +47,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Album:               newAlbum(db, opts...),
 		Artist:              newArtist(db, opts...),
 		PersonalAccessToken: newPersonalAccessToken(db, opts...),
+		Playlist:            newPlaylist(db, opts...),
+		PlaylistSong:        newPlaylistSong(db, opts...),
 		QueueState:          newQueueState(db, opts...),
 		Setting:             newSetting(db, opts...),
 		Song:                newSong(db, opts...),
@@ -56,6 +62,8 @@ type Query struct {
 	Album               album
 	Artist              artist
 	PersonalAccessToken personalAccessToken
+	Playlist            playlist
+	PlaylistSong        playlistSong
 	QueueState          queueState
 	Setting             setting
 	Song                song
@@ -70,6 +78,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Album:               q.Album.clone(db),
 		Artist:              q.Artist.clone(db),
 		PersonalAccessToken: q.PersonalAccessToken.clone(db),
+		Playlist:            q.Playlist.clone(db),
+		PlaylistSong:        q.PlaylistSong.clone(db),
 		QueueState:          q.QueueState.clone(db),
 		Setting:             q.Setting.clone(db),
 		Song:                q.Song.clone(db),
@@ -91,6 +101,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Album:               q.Album.replaceDB(db),
 		Artist:              q.Artist.replaceDB(db),
 		PersonalAccessToken: q.PersonalAccessToken.replaceDB(db),
+		Playlist:            q.Playlist.replaceDB(db),
+		PlaylistSong:        q.PlaylistSong.replaceDB(db),
 		QueueState:          q.QueueState.replaceDB(db),
 		Setting:             q.Setting.replaceDB(db),
 		Song:                q.Song.replaceDB(db),
@@ -102,6 +114,8 @@ type queryCtx struct {
 	Album               IAlbumDo
 	Artist              IArtistDo
 	PersonalAccessToken IPersonalAccessTokenDo
+	Playlist            IPlaylistDo
+	PlaylistSong        IPlaylistSongDo
 	QueueState          IQueueStateDo
 	Setting             ISettingDo
 	Song                ISongDo
@@ -113,6 +127,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Album:               q.Album.WithContext(ctx),
 		Artist:              q.Artist.WithContext(ctx),
 		PersonalAccessToken: q.PersonalAccessToken.WithContext(ctx),
+		Playlist:            q.Playlist.WithContext(ctx),
+		PlaylistSong:        q.PlaylistSong.WithContext(ctx),
 		QueueState:          q.QueueState.WithContext(ctx),
 		Setting:             q.Setting.WithContext(ctx),
 		Song:                q.Song.WithContext(ctx),

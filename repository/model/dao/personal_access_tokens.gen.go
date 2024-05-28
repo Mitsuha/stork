@@ -195,6 +195,7 @@ type IPersonalAccessTokenDo interface {
 
 	FindAll() (result []*model.PersonalAccessToken, err error)
 	FindByID(id int) (result *model.PersonalAccessToken, err error)
+	FindByUserID(uid int) (result []*model.PersonalAccessToken, err error)
 	WhereIDAndToken(id string, token string) (result *model.PersonalAccessToken, err error)
 }
 
@@ -220,6 +221,21 @@ func (p personalAccessTokenDo) FindByID(id int) (result *model.PersonalAccessTok
 
 	var executeSQL *gorm.DB
 	executeSQL = p.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
+func (p personalAccessTokenDo) FindByUserID(uid int) (result []*model.PersonalAccessToken, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, uid)
+	generateSQL.WriteString("SELECT * FROM personal_access_tokens WHERE user_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = p.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

@@ -7,8 +7,8 @@ import (
 
 type DataResponse struct {
 	Settings            any             `json:"settings"`
-	Playlists           string          `json:"playlists"`
-	PlaylistFolders     string          `json:"playlist_folders"`
+	Playlists           []*PlaylistWrap `json:"playlists"`
+	PlaylistFolders     []string        `json:"playlist_folders"`
 	CurrentUser         *UserResp       `json:"current_user"`
 	UseLastFm           bool            `json:"use_last_fm"`
 	UseSpotify          bool            `json:"use_spotify"`
@@ -47,6 +47,25 @@ func WrapUser(user *model.User) *UserResp {
 		Preferences: Preferences{LastFmSessionKey: ""},
 		Type:        "users",
 	}
+}
+
+type PlaylistWrap struct {
+	*model.Playlist `json:",inline"`
+	IsSmart         bool    `json:"is_smart"`
+	Rules           *string `json:"rules" gorm:"type:text"`
+	FolderID        *string `json:"folder_id" gorm:"type:varchar(36)"`
+}
+
+func WrapPlaylist(playlist []*model.Playlist) []*PlaylistWrap {
+	var result []*PlaylistWrap
+	for _, p := range playlist {
+		result = append(result, &PlaylistWrap{
+			Playlist: p,
+			IsSmart:  false,
+		})
+	}
+
+	return result
 }
 
 type Preferences struct {
@@ -117,7 +136,7 @@ type SongWrap struct {
 }
 
 func WrapSongs(songs []*model.Song) []*SongWrap {
-	var result []*SongWrap
+	result := make([]*SongWrap, 0, len(songs))
 	for _, song := range songs {
 		result = append(result, WrapSong(song))
 	}
