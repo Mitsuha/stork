@@ -454,9 +454,7 @@ type ISongDo interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
-	FindAll() (result []*model.Song, err error)
-	FindByID(id int) (result *model.Song, err error)
-	FindByUserID(uid int) (result []*model.Song, err error)
+	FindByID(id string) (result *model.Song, err error)
 	IdIn(ids []string) (result []*model.Song, err error)
 	CountAndLength() (result *model.CountAndLength, err error)
 	MostPlayed(uid int, limit int) (result []*model.Song, err error)
@@ -466,43 +464,16 @@ type ISongDo interface {
 	Favorite(uid int) (result []*model.Song, err error)
 }
 
-// FindAll SELECT * FROM @@table
-func (s songDo) FindAll() (result []*model.Song, err error) {
-	var generateSQL strings.Builder
-	generateSQL.WriteString("SELECT * FROM songs ")
-
-	var executeSQL *gorm.DB
-	executeSQL = s.UnderlyingDB().Raw(generateSQL.String()).Find(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// FindByID SELECT * FROM @@table WHERE id = @id
-func (s songDo) FindByID(id int) (result *model.Song, err error) {
+// FindByID SELECT * FROM @@table where id = @id
+func (s songDo) FindByID(id string) (result *model.Song, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, id)
-	generateSQL.WriteString("SELECT * FROM songs WHERE id = ? ")
+	generateSQL.WriteString("SELECT * FROM songs where id = ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
-func (s songDo) FindByUserID(uid int) (result []*model.Song, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, uid)
-	generateSQL.WriteString("SELECT * FROM songs WHERE user_id = ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

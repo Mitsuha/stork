@@ -3,11 +3,11 @@ package songs
 import (
 	"errors"
 	"fmt"
-	"github.com/dhowden/tag"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/mitsuha/stork/api/v1"
 	"github.com/mitsuha/stork/internal/services/overview"
+	"github.com/mitsuha/stork/pkg/audio"
 	"github.com/mitsuha/stork/pkg/authentication"
 	"github.com/mitsuha/stork/repository"
 	"github.com/mitsuha/stork/repository/model"
@@ -30,25 +30,33 @@ func New() *Songs {
 }
 
 func (s *Songs) Upload(ctx *gin.Context) {
-	var req UploadReq
+	settings := repository.Settings()
 
+	var req UploadReq
 	if err := ctx.ShouldBind(&req); err != nil {
-		fmt.Println(err)
 		ctx.JSON(400, v1.BadRequest)
 		return
 	}
-	err := ctx.SaveUploadedFile(req.File, fmt.Sprintf("uploads/%s", req.File.Filename))
+
+	path := fmt.Sprintf("%s/uploads/%s", settings.MediaPath(), req.File.Filename)
+
+	if err := ctx.SaveUploadedFile(req.File, path); err != nil {
+		ctx.JSON(500, errors.Join(v1.ServerError, err))
+		return
+	}
 
 	file, _ := req.File.Open()
 
-	metadata, err := tag.ReadFrom(file)
-
-	fmt.Println(metadata.Raw())
+	metadata, err := audio.New(audio.OSPath).LoadFromReader(file).Metadata()
+	if err != nil {
+		ctx.JSON(500, errors.Join(v1.ServerError, err))
+		return
+	}
 
 	var artist, album = unknownArtist, unknownAlbum
 	var song *model.Song
 
-	if err == nil {
+	if metadata.HasTag() {
 		artist = &model.Artist{
 			Name: metadata.Artist(),
 		}
@@ -57,18 +65,15 @@ func (s *Songs) Upload(ctx *gin.Context) {
 			Cover: "",
 		}
 
-		_, track := metadata.Track()
-		_, disc := metadata.Disc()
-
 		song = &model.Song{
-			ID:    uuid.NewString(),
-			Title: metadata.Title(),
-			Year:  metadata.Year(),
-			Genre: metadata.Genre(),
-			Track: track,
-			Disc:  disc,
-			//Length: metadata.,
-			Path:   fmt.Sprintf("uploads/%s", req.File.Filename),
+			ID:     uuid.NewString(),
+			Title:  metadata.Title(),
+			Year:   metadata.Year(),
+			Genre:  metadata.Genre(),
+			Track:  metadata.Track(),
+			Disc:   metadata.Track(),
+			Length: metadata.Duration(),
+			Path:   path,
 			Album:  album,
 			Artist: artist,
 		}
@@ -78,9 +83,9 @@ func (s *Songs) Upload(ctx *gin.Context) {
 		title = strings.TrimSuffix(title, filepath.Ext(title))
 
 		song = &model.Song{
-			Title: title,
-			//Length: metadata.,
-			Path:   fmt.Sprintf("uploads/%s", req.File.Filename),
+			Title:  title,
+			Length: metadata.Duration(),
+			Path:   path,
 			Album:  album,
 			Artist: artist,
 		}
@@ -107,4 +112,19 @@ func (s *Songs) Favorite(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, overview.WrapSongs(songs))
+}
+
+func (s *Songs) Play(ctx *gin.Context) {
+	var req PlayReq
+	if err := ctx.BindUri(&req); err != nil {
+		ctx.JSON(400, v1.BadRequest)
+		return
+	}
+	song, err := dao.Song.WithContext(ctx).FindByID(req.ID)
+	if err != nil {
+		ctx.JSON(404, v1.NotFound)
+		return
+	}
+
+	ctx.File(song.Path)
 }

@@ -4,9 +4,11 @@ import "gorm.io/gen"
 
 func ApplyQueries(g *gen.Generator) {
 	var tables = []any{
-		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, Song{}, QueueState{}, Playlist{}, PlaylistSong{},
+		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, QueueState{}, Playlist{}, PlaylistSong{},
 	}
 	g.ApplyBasic(tables...)
+
+	g.ApplyBasic(Song{})
 
 	g.ApplyInterface(func(CommonQueries) {}, tables...)
 
@@ -62,6 +64,9 @@ type AlbumQueries interface {
 }
 
 type SongQueries interface {
+	//FindByID SELECT * FROM @@table where id = @id
+	FindByID(id string) (*gen.T, error)
+
 	//IdIn SELECT * FROM @@table WHERE id IN (@ids)
 	IdIn(ids []string) ([]*gen.T, error)
 

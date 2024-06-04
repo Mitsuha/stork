@@ -59,7 +59,9 @@ func Run() error {
 
 		router := r.Group("/songs")
 		router.GET("/favorite", service.Favorite)
-		//r.POST("/upload", service.Upload)
+		r.POST("/upload", service.Upload)
+
+		engine.GET("/play/:id", c, service.Play)
 	}
 
 	{

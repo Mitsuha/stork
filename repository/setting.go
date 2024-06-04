@@ -8,13 +8,17 @@ import (
 	"time"
 )
 
-type settings map[string]any
+type AppSettings map[string]any
 
-var _settings = settings{}
+func (s *AppSettings) MediaPath() string {
+	return (*s)["media_path"].(string)
+}
+
+var _settings = AppSettings{}
 
 var _settingOnce sync.Once
 
-func Settings() settings {
+func Settings() AppSettings {
 	_settingOnce.Do(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
