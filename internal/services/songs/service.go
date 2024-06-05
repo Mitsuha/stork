@@ -20,6 +20,10 @@ import (
 type Songs struct {
 }
 
+const (
+	RecentlyPlayedCount = 128
+)
+
 var (
 	unknownArtist = &model.Artist{Name: "Unknown Artist"}
 	unknownAlbum  = &model.Album{Name: "Unknown Album"}
@@ -106,6 +110,18 @@ func (s *Songs) Favorite(ctx *gin.Context) {
 	user := authentication.User(ctx)
 
 	songs, err := dao.Song.WithContext(ctx).Preload(dao.Song.Album, dao.Song.Artist, dao.Song.Interaction).Favorite(user.ID)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	ctx.JSON(200, overview.WrapSongs(songs))
+}
+
+func (s *Songs) RecentlyPlayed(ctx *gin.Context) {
+	user := authentication.User(ctx)
+
+	songs, err := dao.Song.WithContext(ctx).Preload(dao.Song.Album, dao.Song.Artist, dao.Song.Interaction).RecentlyPlayed(user.ID, RecentlyPlayedCount)
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
