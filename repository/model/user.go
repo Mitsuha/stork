@@ -10,7 +10,7 @@ type User struct {
 	Name                 string         `json:"name" gorm:"column:name"`
 	Email                string         `json:"email" gorm:"column:email"`
 	Password             string         `json:"-" gorm:"column:password"`
-	IsAdmin              int            `json:"is_admin" gorm:"column:is_admin"`
+	IsAdmin              bool           `json:"is_admin" gorm:"column:is_admin"`
 	Preferences          sql.NullString `json:"preferences" gorm:"column:preferences"`
 	RememberToken        sql.NullString `json:"remember_token" gorm:"column:remember_token"`
 	CreatedAt            time.Time      `json:"created_at" gorm:"column:created_at"`

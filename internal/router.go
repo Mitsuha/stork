@@ -10,6 +10,7 @@ import (
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
 	"github.com/mitsuha/stork/internal/services/songs"
+	"github.com/mitsuha/stork/internal/services/users"
 	customValidator "github.com/mitsuha/stork/internal/validator"
 	"github.com/mitsuha/stork/pkg/authentication"
 	"time"
@@ -42,6 +43,13 @@ func Run() error {
 
 		r.GET("/data", service.Data)
 		r.GET("/overview", service.Overview)
+	}
+
+	{
+		service := users.New()
+
+		//router := r.Group("/users")
+		r.GET("/users", service.Index)
 	}
 
 	{
