@@ -9,7 +9,6 @@ import (
 	"github.com/mitsuha/stork/internal/services/artists"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
-	"github.com/mitsuha/stork/internal/services/reverseProxy"
 	"github.com/mitsuha/stork/internal/services/songs"
 	customValidator "github.com/mitsuha/stork/internal/validator"
 	"github.com/mitsuha/stork/pkg/authentication"
@@ -22,8 +21,13 @@ func Run() error {
 	c := cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		AllowHeaders: []string{
+			"X-Api-Version", "authorization", "content-type",
+		},
+		MaxAge: 12 * time.Hour,
 	})
+
+	engine.Use(c)
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		if err := v.RegisterValidation("audioOnly", customValidator.AudioOnly); err != nil {
@@ -31,7 +35,8 @@ func Run() error {
 		}
 	}
 
-	r := engine.Group("/api", c, authentication.Auth)
+	r := engine.Group("/api", authentication.Auth)
+
 	{
 		service := overview.New()
 
@@ -72,7 +77,7 @@ func Run() error {
 		r.PUT("/playlists/:id", service.Update)
 	}
 
-	engine.NoRoute(reverseProxy.New())
+	//engine.NoRoute(reverseProxy.New())
 
 	return engine.Run()
 }
