@@ -18,7 +18,7 @@ func New() *Overview {
 func (o *Overview) Data(ctx *gin.Context) {
 	user := authentication.User(ctx)
 
-	state, err := repository.UsersQueueState(ctx, user.ID)
+	state, err := repository.NewQueueStates(ctx).UsersQueueState(user.ID)
 	if err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return

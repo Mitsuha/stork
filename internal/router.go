@@ -9,6 +9,7 @@ import (
 	"github.com/mitsuha/stork/internal/services/artists"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
+	"github.com/mitsuha/stork/internal/services/queue"
 	"github.com/mitsuha/stork/internal/services/songs"
 	"github.com/mitsuha/stork/internal/services/users"
 	customValidator "github.com/mitsuha/stork/internal/validator"
@@ -22,6 +23,9 @@ func Run() error {
 	c := cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowCredentials: true,
+		AllowMethods: []string{
+			"GET", "POST", "PUT", "DELETE",
+		},
 		AllowHeaders: []string{
 			"X-Api-Version", "authorization", "content-type",
 		},
@@ -84,6 +88,13 @@ func Run() error {
 		r.POST("/playlists", service.Create)
 		r.GET("/playlists/:id/songs", service.Songs)
 		r.PUT("/playlists/:id", service.Update)
+	}
+
+	{
+		service := queue.New()
+
+		r.PUT("/queue/state", service.UpdateState)
+		r.PUT("/queue/playback-status", service.PlaybackStatus)
 	}
 
 	//engine.NoRoute(reverseProxy.New())
