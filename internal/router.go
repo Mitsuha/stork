@@ -68,6 +68,7 @@ func Run() error {
 		service := artists.New()
 
 		router := r.Group("/artists")
+		r.GET("/artists", service.Index)
 		router.GET("/:id", service.Show)
 	}
 
