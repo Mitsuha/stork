@@ -1,6 +1,13 @@
 package albums
 
-import "github.com/mitsuha/stork/repository/model"
+import (
+	"github.com/mitsuha/stork/pkg/paginate"
+	"github.com/mitsuha/stork/repository/model"
+)
+
+type IndexReq struct {
+	paginate.Request
+}
 
 type ShowReq struct {
 	ID int `json:"id" uri:"id" binding:"required"`

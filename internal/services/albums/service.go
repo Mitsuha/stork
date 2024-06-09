@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	v1 "github.com/mitsuha/stork/api/v1"
+	"github.com/mitsuha/stork/internal/container"
 	"github.com/mitsuha/stork/internal/services/overview"
+	"github.com/mitsuha/stork/pkg/paginate"
+	"github.com/mitsuha/stork/repository/model"
 	"github.com/mitsuha/stork/repository/model/dao"
 )
 
@@ -30,6 +33,25 @@ func (a *Albums) Show(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, WrapAlbum(album))
+}
+
+func (a *Albums) Index(ctx *gin.Context) {
+	var req IndexReq
+
+	if err := req.BindRequest(ctx); err != nil {
+		ctx.JSON(400, v1.BadRequest)
+		return
+	}
+
+	query := container.Singled.DB.Order("name ASC")
+
+	page, err := paginate.Simple[model.Album](query, req.Request)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	ctx.JSON(200, page)
 }
 
 func (a *Albums) Songs(ctx *gin.Context) {
