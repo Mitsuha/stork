@@ -6,9 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/mitsuha/stork/api/v1"
+	"github.com/mitsuha/stork/internal/container"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/pkg/audio"
 	"github.com/mitsuha/stork/pkg/authentication"
+	"github.com/mitsuha/stork/pkg/paginate"
 	"github.com/mitsuha/stork/repository"
 	"github.com/mitsuha/stork/repository/model"
 	"github.com/mitsuha/stork/repository/model/dao"
@@ -31,6 +33,27 @@ var (
 
 func New() *Songs {
 	return &Songs{}
+}
+
+func (s *Songs) Index(ctx *gin.Context) {
+	var req IndexReq
+	if err := req.BindRequest(ctx); err != nil {
+		ctx.JSON(400, v1.BadRequest)
+		return
+	}
+
+	query := container.Singled.DB.Order(fmt.Sprintf("%s %s", req.Sort, req.Order)).Preload("Album").Preload("Artist").Preload("Interaction")
+
+	page, err := paginate.Simple[*model.Song](query, req.Request)
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	ctx.JSON(200, paginate.Page[*overview.SongWrap]{
+		Data: overview.WrapSongs(page.Data),
+		Meta: page.Meta,
+	})
 }
 
 func (s *Songs) Upload(ctx *gin.Context) {

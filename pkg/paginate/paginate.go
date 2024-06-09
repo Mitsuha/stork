@@ -1,6 +1,8 @@
 package paginate
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Page[T any] struct {
 	Data []T  `json:"data"`
