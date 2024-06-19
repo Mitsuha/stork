@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/ipfs/boxo/files"
 	"github.com/mitsuha/stork/api/v1"
 	"github.com/mitsuha/stork/internal/container"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/pkg/audio"
 	"github.com/mitsuha/stork/pkg/authentication"
+	"github.com/mitsuha/stork/pkg/ipfs"
 	"github.com/mitsuha/stork/pkg/paginate"
 	"github.com/mitsuha/stork/repository"
 	"github.com/mitsuha/stork/repository/model"
 	"github.com/mitsuha/stork/repository/model/dao"
+	"io"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -57,24 +60,30 @@ func (s *Songs) Index(ctx *gin.Context) {
 }
 
 func (s *Songs) Upload(ctx *gin.Context) {
-	settings := repository.Settings()
-
 	var req UploadReq
 	if err := ctx.ShouldBind(&req); err != nil {
 		ctx.JSON(400, v1.BadRequest)
 		return
 	}
 
-	path := fmt.Sprintf("%s/uploads/%s", settings.MediaPath(), req.File.Filename)
-
-	if err := ctx.SaveUploadedFile(req.File, path); err != nil {
+	file, err := req.File.Open()
+	if err != nil {
 		ctx.JSON(500, errors.Join(v1.ServerError, err))
 		return
 	}
 
-	file, _ := req.File.Open()
-
 	metadata, err := audio.New(audio.OSPath).LoadFromReader(file).Metadata()
+	if err != nil {
+		ctx.JSON(500, errors.Join(v1.ServerError, err))
+		return
+	}
+
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		ctx.JSON(500, errors.Join(v1.ServerError, err))
+		return
+	}
+
+	path, err := container.Singled.Ipfs.Unixfs().Add(ctx, files.NewReaderFile(file))
 	if err != nil {
 		ctx.JSON(500, errors.Join(v1.ServerError, err))
 		return
@@ -100,7 +109,7 @@ func (s *Songs) Upload(ctx *gin.Context) {
 			Track:  metadata.Track(),
 			Disc:   metadata.Track(),
 			Length: metadata.Duration(),
-			Path:   path,
+			Path:   path.RootCid().String(),
 			Album:  album,
 			Artist: artist,
 		}
@@ -112,7 +121,7 @@ func (s *Songs) Upload(ctx *gin.Context) {
 		song = &model.Song{
 			Title:  title,
 			Length: metadata.Duration(),
-			Path:   path,
+			Path:   path.RootCid().String(),
 			Album:  album,
 			Artist: artist,
 		}
@@ -165,5 +174,5 @@ func (s *Songs) Play(ctx *gin.Context) {
 		return
 	}
 
-	ctx.File(song.Path)
+	ctx.FileFromFS(song.Path, ipfs.NewFilesystem(container.Singled.Ipfs, ctx))
 }
