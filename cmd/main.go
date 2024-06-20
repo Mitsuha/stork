@@ -4,9 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/ipfs/kubo/core"
+	"github.com/ipfs/kubo/core/node/libp2p"
 	"github.com/mitsuha/stork/config"
 	"github.com/mitsuha/stork/internal"
 	"github.com/mitsuha/stork/internal/container"
+	"github.com/mitsuha/stork/pkg/ipfs"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,9 +29,13 @@ func main() {
 		return
 	}
 
-	if err := container.Boot(ctx); err != nil {
+	if err := container.Boot(); err != nil {
 		fmt.Println("Failed to boot the container: ", err)
 		return
+	}
+
+	if err := ipfs.Start(ctx, defaultIPFSConfig()); err != nil {
+		panic(err)
 	}
 
 	if err := internal.Run(); err != nil {
@@ -42,5 +49,16 @@ func listenCancel(cancel context.CancelFunc) {
 
 	<-sigint
 	cancel()
+	_ = ipfs.Close()
 	os.Exit(0)
+}
+
+func defaultIPFSConfig() *ipfs.Config {
+	return &ipfs.Config{
+		BuildCfg: core.BuildCfg{
+			Online:  true,
+			Routing: libp2p.DHTOption,
+		},
+		RepoPath: ".ipfs",
+	}
 }

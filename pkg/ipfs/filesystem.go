@@ -16,12 +16,12 @@ import (
 
 // Filesystem implements the http.FileSystem interface for IPFS.
 type Filesystem struct {
-	ipfs iface.CoreAPI
-	ctx  context.Context
+	IPFS iface.CoreAPI
+	Ctx  context.Context
 }
 
 func NewFilesystem(ipfs iface.CoreAPI, ctx context.Context) *Filesystem {
-	return &Filesystem{ipfs: ipfs, ctx: ctx}
+	return &Filesystem{IPFS: ipfs, Ctx: ctx}
 }
 
 func (f *Filesystem) Open(name string) (http.File, error) {
@@ -31,7 +31,7 @@ func (f *Filesystem) Open(name string) (http.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid cid: %s", name)
 	}
-	node, err := f.ipfs.Unixfs().Get(f.ctx, path.FromCid(c))
+	node, err := f.IPFS.Unixfs().Get(f.Ctx, path.FromCid(c))
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch cid: %s", err)
 	}
@@ -41,6 +41,13 @@ func (f *Filesystem) Open(name string) (http.File, error) {
 	}
 
 	return NewFile(name, file), nil
+}
+
+// WithOption applies the given options to the filesystem.
+func (f *Filesystem) WithOption(options ...func(filesystem *Filesystem)) {
+	for _, option := range options {
+		option(f)
+	}
 }
 
 // File implements the http.File interface for IPFS.

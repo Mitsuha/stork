@@ -1,6 +1,7 @@
 package songs
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type Songs struct {
@@ -83,7 +85,7 @@ func (s *Songs) Upload(ctx *gin.Context) {
 		return
 	}
 
-	path, err := container.Singled.Ipfs.Unixfs().Add(ctx, files.NewReaderFile(file))
+	path, err := ipfs.Unixfs().Add(ctx, files.NewReaderFile(file))
 	if err != nil {
 		ctx.JSON(500, errors.Join(v1.ServerError, err))
 		return
@@ -162,6 +164,19 @@ func (s *Songs) RecentlyPlayed(ctx *gin.Context) {
 	ctx.JSON(200, overview.WrapSongs(songs))
 }
 
+var fsPool = sync.Pool{
+	New: func() any {
+		return ipfs.NewFilesystem(nil, nil)
+	},
+}
+
+func SetupFS(ctx context.Context) func(filesystem *ipfs.Filesystem) {
+	return func(f *ipfs.Filesystem) {
+		f.IPFS = ipfs.Instance()
+		f.Ctx = ctx
+	}
+}
+
 func (s *Songs) Play(ctx *gin.Context) {
 	var req PlayReq
 	if err := ctx.BindUri(&req); err != nil {
@@ -174,5 +189,12 @@ func (s *Songs) Play(ctx *gin.Context) {
 		return
 	}
 
-	ctx.FileFromFS(song.Path, ipfs.NewFilesystem(container.Singled.Ipfs, ctx))
+	fs := fsPool.Get().(*ipfs.Filesystem)
+	defer func() {
+		fsPool.Put(fs)
+	}()
+
+	fs.WithOption(SetupFS(ctx))
+
+	ctx.FileFromFS(song.Path, fs)
 }
