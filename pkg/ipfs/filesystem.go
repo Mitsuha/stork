@@ -60,7 +60,7 @@ func NewFile(name string, file files.File) *File {
 	return &File{File: file, Name: name}
 }
 
-func (f *File) Readdir(count int) ([]fs.FileInfo, error) {
+func (f *File) Readdir(_ int) ([]fs.FileInfo, error) {
 	return nil, errors.New("not a directory")
 }
 

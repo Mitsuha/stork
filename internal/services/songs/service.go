@@ -172,10 +172,9 @@ var fsPool = sync.Pool{
 }
 
 func SetupFS(ctx context.Context) func(filesystem *ipfs.Filesystem) {
-	tc, _ := context.WithTimeout(ctx, 10*time.Second)
 	return func(f *ipfs.Filesystem) {
 		f.IPFS = ipfs.Instance()
-		f.Ctx = tc
+		f.Ctx = ctx
 	}
 }
 
@@ -192,11 +191,14 @@ func (s *Songs) Play(ctx *gin.Context) {
 	}
 
 	fs := fsPool.Get().(*ipfs.Filesystem)
+	tc, cancel := context.WithTimeout(ctx, 10*time.Second)
+
 	defer func() {
 		fsPool.Put(fs)
+		cancel()
 	}()
 
-	fs.WithOption(SetupFS(ctx))
+	fs.WithOption(SetupFS(tc))
 
 	ctx.FileFromFS(song.Path, fs)
 }

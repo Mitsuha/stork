@@ -23,7 +23,7 @@ func (u *User) Login(ctx *gin.Context) {
 
 	user, err := authentication.Login(ctx, req.Email, req.Password)
 	if err != nil {
-		ctx.JSON(401, err)
+		ctx.JSON(401, v1.PasswordIncorrect)
 		return
 	}
 
