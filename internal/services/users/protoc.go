@@ -1,6 +1,27 @@
 package users
 
-import "github.com/mitsuha/stork/repository/model"
+import (
+	"github.com/goccy/go-json"
+	"github.com/mitsuha/stork/pkg/authentication"
+	"github.com/mitsuha/stork/repository/model"
+)
+
+type LoginReq struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResp struct {
+	Token *authentication.AccessToken `json:"api"`
+	Audio *authentication.AccessToken `json:"audio"`
+}
+
+func (l LoginResp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"token":       l.Token.Token(),
+		"audio-token": l.Audio.Token(),
+	})
+}
 
 type UserSummary struct {
 	ID         int    `json:"id"`

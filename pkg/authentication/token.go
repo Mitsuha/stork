@@ -5,45 +5,42 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"github.com/mitsuha/stork/pkg/strs"
 	"github.com/mitsuha/stork/repository/model"
 	"github.com/mitsuha/stork/repository/model/dao"
-	"golang.org/x/crypto/sha3"
-	"strconv"
 	"strings"
 )
 
-type UserWrap struct {
-	model.User `json:",inline"`
-
-	Token TokenWrap `json:"token"`
+type AccessToken struct {
+	Model      *model.PersonalAccessToken `json:"-"`
+	PlainToken string                     `json:"token"`
 }
 
-type TokenWrap struct {
-	Model *model.PersonalAccessToken `json:"-"`
-	Token string                     `json:"token"`
+func (a *AccessToken) Token() string {
+	return fmt.Sprintf("%d|%s", a.Model.ID, a.PlainToken)
 }
 
-func NewWrap(model *model.PersonalAccessToken) *TokenWrap {
-	h := sha3.New256()
-	h.Write([]byte(model.Token))
+func NewAccessToken(user *model.User, abilities []string) *AccessToken {
+	plainTextToken := strs.Random(40)
 
-	return &TokenWrap{
-		Model: model,
-		Token: strconv.Itoa(model.ID) + "|" + string(h.Sum(nil)),
+	s := sha256.New()
+	s.Write([]byte(plainTextToken))
+
+	return &AccessToken{
+		Model: &model.PersonalAccessToken{
+			ID:          0,
+			TokenableID: user.ID,
+			Name:        user.Name,
+			Token:       hex.EncodeToString(s.Sum(nil)),
+			Abilities:   abilities,
+		},
+		PlainToken: plainTextToken,
 	}
 }
 
-func getUser(ctx context.Context, token string) (*model.User, error) {
-	wrap, err := getToken(ctx, token)
-	if err != nil {
-		return nil, err
-	}
-
-	return dao.User.WithContext(ctx).FindByID(wrap.Model.TokenableID)
-}
-
-func getToken(ctx context.Context, token string) (*TokenWrap, error) {
-	t := strings.Split(token, "|")
+func accessTokenFromEncodingToken(ctx context.Context, et string) (*AccessToken, error) {
+	t := strings.Split(et, "|")
 	if len(t) != 2 {
 		return nil, errors.New("invalid token")
 	}
@@ -52,11 +49,11 @@ func getToken(ctx context.Context, token string) (*TokenWrap, error) {
 
 	h.Write([]byte(t[1]))
 
-	tm, err := dao.PersonalAccessToken.WithContext(ctx).WhereIDAndToken(t[0], hex.EncodeToString(h.Sum(nil)))
+	pt, err := dao.PersonalAccessToken.WithContext(ctx).WhereIDAndToken(t[0], hex.EncodeToString(h.Sum(nil)))
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &TokenWrap{Model: tm}, nil
+	return &AccessToken{Model: pt, PlainToken: t[1]}, nil
 }

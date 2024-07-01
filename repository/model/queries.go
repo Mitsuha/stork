@@ -4,13 +4,15 @@ import "gorm.io/gen"
 
 func ApplyQueries(g *gen.Generator) {
 	var tables = []any{
-		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Artist{}, Album{}, QueueState{}, Playlist{}, PlaylistSong{},
+		Album{}, Artist{}, Setting{}, User{}, PersonalAccessToken{}, Interaction{}, Artist{}, Album{}, QueueState{}, Playlist{}, PlaylistSong{},
 	}
 	g.ApplyBasic(tables...)
 
 	g.ApplyBasic(Song{})
 
 	g.ApplyInterface(func(CommonQueries) {}, tables...)
+
+	g.ApplyInterface(func(UserQueries) {}, User{})
 
 	g.ApplyInterface(func(TokenQueries) {}, PersonalAccessToken{})
 
@@ -21,6 +23,8 @@ func ApplyQueries(g *gen.Generator) {
 	g.ApplyInterface(func(SongQueries) {}, Song{})
 
 	g.ApplyInterface(func(QueueStateQueries) {}, QueueState{})
+
+	g.ApplyInterface(func(InteractionQueries) {}, Interaction{})
 }
 
 type CommonQueries interface {
@@ -32,6 +36,11 @@ type CommonQueries interface {
 
 	// FindByUserID SELECT * FROM @@table WHERE user_id = @uid
 	FindByUserID(uid int) ([]*gen.T, error)
+}
+
+type UserQueries interface {
+	//FindByEmail SELECT * FROM @@table WHERE email = @email
+	FindByEmail(email string) (*gen.T, error)
 }
 
 type TokenQueries interface {
@@ -103,4 +112,15 @@ type SongQueries interface {
 type QueueStateQueries interface {
 	//WhereUser SELECT * FROM @@table WHERE user_id = @uid
 	WhereUser(uid int) (*gen.T, error)
+}
+
+type InteractionQueries interface {
+	//ToggleLike UPDATE interactions SET liked = @liked WHERE user_id = @uid AND song_id = @sid
+	ToggleLike(uid int, sid string, liked bool) error
+
+	//HasOtherLiked SELECT id FROM interactions WHERE song_id = @sid AND user_id != @uid AND liked = 1 limit 1
+	HasOtherLiked(uid int, sid string) (bool, error)
+
+	//FindByUserSong SELECT * FROM @@table WHERE user_id = @uid AND song_id = @sid
+	FindByUserSong(uid int, sid string) (*gen.T, error)
 }

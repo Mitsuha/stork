@@ -23,8 +23,8 @@ func (j *StringArray) Scan(value interface{}) error {
 	return err
 }
 
-func (j *StringArray) Value() (driver.Value, error) {
-	if len(*j) == 0 {
+func (j StringArray) Value() (driver.Value, error) {
+	if len(j) == 0 {
 		return nil, nil
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
 	"github.com/mitsuha/stork/internal/services/queue"
+	"github.com/mitsuha/stork/internal/services/reverseProxy"
 	"github.com/mitsuha/stork/internal/services/songs"
 	"github.com/mitsuha/stork/internal/services/users"
 	customValidator "github.com/mitsuha/stork/internal/validator"
@@ -54,6 +55,7 @@ func Run() error {
 
 		//router := r.Group("/users")
 		r.GET("/users", service.Index)
+		engine.POST("/api/me", service.Login)
 	}
 
 	{
@@ -101,7 +103,7 @@ func Run() error {
 		r.PUT("/queue/playback-status", service.PlaybackStatus)
 	}
 
-	//engine.NoRoute(reverseProxy.New())
+	engine.NoRoute(reverseProxy.New())
 
 	return engine.Run()
 }

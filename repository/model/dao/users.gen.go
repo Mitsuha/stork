@@ -32,7 +32,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Name = field.NewString(tableName, "name")
 	_user.Email = field.NewString(tableName, "email")
 	_user.Password = field.NewString(tableName, "password")
-	_user.IsAdmin = field.NewInt(tableName, "is_admin")
+	_user.IsAdmin = field.NewBool(tableName, "is_admin")
 	_user.Preferences = field.NewField(tableName, "preferences")
 	_user.RememberToken = field.NewField(tableName, "remember_token")
 	_user.CreatedAt = field.NewTime(tableName, "created_at")
@@ -55,7 +55,7 @@ type user struct {
 	Name                 field.String
 	Email                field.String
 	Password             field.String
-	IsAdmin              field.Int
+	IsAdmin              field.Bool
 	Preferences          field.Field
 	RememberToken        field.Field
 	CreatedAt            field.Time
@@ -84,7 +84,7 @@ func (u *user) updateTableName(table string) *user {
 	u.Name = field.NewString(table, "name")
 	u.Email = field.NewString(table, "email")
 	u.Password = field.NewString(table, "password")
-	u.IsAdmin = field.NewInt(table, "is_admin")
+	u.IsAdmin = field.NewBool(table, "is_admin")
 	u.Preferences = field.NewField(table, "preferences")
 	u.RememberToken = field.NewField(table, "remember_token")
 	u.CreatedAt = field.NewTime(table, "created_at")
@@ -208,6 +208,7 @@ type IUserDo interface {
 	FindAll() (result []*model.User, err error)
 	FindByID(id int) (result *model.User, err error)
 	FindByUserID(uid int) (result []*model.User, err error)
+	FindByEmail(email string) (result *model.User, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -247,6 +248,21 @@ func (u userDo) FindByUserID(uid int) (result []*model.User, err error) {
 
 	var executeSQL *gorm.DB
 	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// FindByEmail SELECT * FROM @@table WHERE email = @email
+func (u userDo) FindByEmail(email string) (result *model.User, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, email)
+	generateSQL.WriteString("SELECT * FROM users WHERE email = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return
