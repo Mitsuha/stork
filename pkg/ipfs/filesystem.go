@@ -31,11 +31,11 @@ func (f *Filesystem) Open(name string) (http.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid cid: %s", name)
 	}
-	node, err := f.IPFS.Unixfs().Get(f.Ctx, path.FromCid(c))
+	fn, err := f.IPFS.Unixfs().Get(f.Ctx, path.FromCid(c))
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch cid: %s", err)
 	}
-	file, ok := node.(files.File)
+	file, ok := fn.(files.File)
 	if !ok {
 		return nil, fmt.Errorf("node is not a file")
 	}

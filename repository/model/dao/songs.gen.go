@@ -42,6 +42,7 @@ func newSong(db *gorm.DB, opts ...gen.DOOption) song {
 	_song.ArtistID = field.NewInt(tableName, "artist_id")
 	_song.Year = field.NewInt(tableName, "year")
 	_song.Genre = field.NewString(tableName, "genre")
+	_song.From = field.NewInt8(tableName, "from")
 	_song.Interaction = songHasOneInteraction{
 		db: db.Session(&gorm.Session{}),
 
@@ -88,6 +89,7 @@ type song struct {
 	ArtistID    field.Int
 	Year        field.Int
 	Genre       field.String
+	From        field.Int8
 	Interaction songHasOneInteraction
 
 	Album songBelongsToAlbum
@@ -123,6 +125,7 @@ func (s *song) updateTableName(table string) *song {
 	s.ArtistID = field.NewInt(table, "artist_id")
 	s.Year = field.NewInt(table, "year")
 	s.Genre = field.NewString(table, "genre")
+	s.From = field.NewInt8(table, "from")
 
 	s.fillFieldMap()
 
@@ -147,7 +150,7 @@ func (s *song) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (s *song) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 17)
+	s.fieldMap = make(map[string]field.Expr, 18)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["album_id"] = s.AlbumID
 	s.fieldMap["title"] = s.Title
@@ -162,6 +165,7 @@ func (s *song) fillFieldMap() {
 	s.fieldMap["artist_id"] = s.ArtistID
 	s.fieldMap["year"] = s.Year
 	s.fieldMap["genre"] = s.Genre
+	s.fieldMap["from"] = s.From
 
 }
 

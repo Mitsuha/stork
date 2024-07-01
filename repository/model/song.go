@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+type SongFrom int8
+
+const (
+	SFromLocal SongFrom = iota
+	SFromCloud
+)
+
 type Song struct {
 	ID          string       `json:"id" gorm:"column:id;primary_key"`
 	AlbumID     int          `json:"album_id" gorm:"column:album_id"`
@@ -22,6 +29,7 @@ type Song struct {
 	Album       *Album       `json:"album" gorm:"foreignKey:album_id"`
 	Artist      *Artist      `json:"artist" gorm:"foreignKey:artist_id"`
 	Interaction *Interaction `json:"interaction" gorm:"foreignKey:song_id"`
+	From        SongFrom     `json:"from" gorm:"column:from"`
 }
 
 type CountAndLength struct {

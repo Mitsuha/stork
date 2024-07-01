@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mitsuha/stork/internal/services/albums"
 	"github.com/mitsuha/stork/internal/services/artists"
+	"github.com/mitsuha/stork/internal/services/interaction"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
 	"github.com/mitsuha/stork/internal/services/queue"
@@ -73,6 +74,13 @@ func Run() error {
 		router := r.Group("/artists")
 		r.GET("/artists", service.Index)
 		router.GET("/:id", service.Show)
+	}
+
+	{
+		service := interaction.New()
+		router := r.Group("/interaction")
+		router.POST("/like", service.ToggleLike)
+		router.POST("/play", service.Play)
 	}
 
 	{

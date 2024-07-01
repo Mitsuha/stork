@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Songs struct {
@@ -171,9 +172,10 @@ var fsPool = sync.Pool{
 }
 
 func SetupFS(ctx context.Context) func(filesystem *ipfs.Filesystem) {
+	tc, _ := context.WithTimeout(ctx, 10*time.Second)
 	return func(f *ipfs.Filesystem) {
 		f.IPFS = ipfs.Instance()
-		f.Ctx = ctx
+		f.Ctx = tc
 	}
 }
 

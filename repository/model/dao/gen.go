@@ -19,6 +19,7 @@ var (
 	Q                   = new(Query)
 	Album               *album
 	Artist              *artist
+	Interaction         *interaction
 	PersonalAccessToken *personalAccessToken
 	Playlist            *playlist
 	PlaylistSong        *playlistSong
@@ -32,6 +33,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Album = &Q.Album
 	Artist = &Q.Artist
+	Interaction = &Q.Interaction
 	PersonalAccessToken = &Q.PersonalAccessToken
 	Playlist = &Q.Playlist
 	PlaylistSong = &Q.PlaylistSong
@@ -46,6 +48,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:                  db,
 		Album:               newAlbum(db, opts...),
 		Artist:              newArtist(db, opts...),
+		Interaction:         newInteraction(db, opts...),
 		PersonalAccessToken: newPersonalAccessToken(db, opts...),
 		Playlist:            newPlaylist(db, opts...),
 		PlaylistSong:        newPlaylistSong(db, opts...),
@@ -61,6 +64,7 @@ type Query struct {
 
 	Album               album
 	Artist              artist
+	Interaction         interaction
 	PersonalAccessToken personalAccessToken
 	Playlist            playlist
 	PlaylistSong        playlistSong
@@ -77,6 +81,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:                  db,
 		Album:               q.Album.clone(db),
 		Artist:              q.Artist.clone(db),
+		Interaction:         q.Interaction.clone(db),
 		PersonalAccessToken: q.PersonalAccessToken.clone(db),
 		Playlist:            q.Playlist.clone(db),
 		PlaylistSong:        q.PlaylistSong.clone(db),
@@ -100,6 +105,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:                  db,
 		Album:               q.Album.replaceDB(db),
 		Artist:              q.Artist.replaceDB(db),
+		Interaction:         q.Interaction.replaceDB(db),
 		PersonalAccessToken: q.PersonalAccessToken.replaceDB(db),
 		Playlist:            q.Playlist.replaceDB(db),
 		PlaylistSong:        q.PlaylistSong.replaceDB(db),
@@ -113,6 +119,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	Album               IAlbumDo
 	Artist              IArtistDo
+	Interaction         IInteractionDo
 	PersonalAccessToken IPersonalAccessTokenDo
 	Playlist            IPlaylistDo
 	PlaylistSong        IPlaylistSongDo
@@ -126,6 +133,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Album:               q.Album.WithContext(ctx),
 		Artist:              q.Artist.WithContext(ctx),
+		Interaction:         q.Interaction.WithContext(ctx),
 		PersonalAccessToken: q.PersonalAccessToken.WithContext(ctx),
 		Playlist:            q.Playlist.WithContext(ctx),
 		PlaylistSong:        q.PlaylistSong.WithContext(ctx),

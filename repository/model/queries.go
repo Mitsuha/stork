@@ -123,4 +123,7 @@ type InteractionQueries interface {
 
 	//FindByUserSong SELECT * FROM @@table WHERE user_id = @uid AND song_id = @sid
 	FindByUserSong(uid int, sid string) (*gen.T, error)
+
+	//IncPlayCount UPDATE interactions SET play_count = play_count + 1 last_played_at = NOW() WHERE user_id = @uid AND song_id = @sid
+	IncPlayCount(uid int, sid string) error
 }
