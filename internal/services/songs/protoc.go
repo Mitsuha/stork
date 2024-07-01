@@ -3,8 +3,8 @@ package songs
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mitsuha/stork/pkg/paginate"
-	"github.com/mitsuha/stork/pkg/slices"
 	"mime/multipart"
+	"slices"
 )
 
 type IndexReq struct {
@@ -27,11 +27,11 @@ func (i *IndexReq) BindRequest(ctx *gin.Context) error {
 		i.PageSize = paginate.PageSize
 	}
 
-	if !slices.Container(optionalColumn, i.Sort) {
+	if !slices.Contains(optionalColumn, i.Sort) {
 		i.Sort = optionalColumn[0]
 	}
 
-	if !slices.Container(optionalOrder, i.Order) {
+	if !slices.Contains(optionalOrder, i.Order) {
 		i.Order = optionalOrder[0]
 	}
 	return nil
