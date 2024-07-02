@@ -1,7 +1,6 @@
 package songs
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -21,8 +20,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"sync"
-	"time"
 )
 
 type Songs struct {
@@ -165,19 +162,6 @@ func (s *Songs) RecentlyPlayed(ctx *gin.Context) {
 	ctx.JSON(200, overview.WrapSongs(songs))
 }
 
-var fsPool = sync.Pool{
-	New: func() any {
-		return ipfs.NewFilesystem(nil, nil)
-	},
-}
-
-func SetupFS(ctx context.Context) func(filesystem *ipfs.Filesystem) {
-	return func(f *ipfs.Filesystem) {
-		f.IPFS = ipfs.Instance()
-		f.Ctx = ctx
-	}
-}
-
 func (s *Songs) Play(ctx *gin.Context) {
 	var req PlayReq
 	if err := ctx.BindUri(&req); err != nil {
@@ -190,15 +174,5 @@ func (s *Songs) Play(ctx *gin.Context) {
 		return
 	}
 
-	fs := fsPool.Get().(*ipfs.Filesystem)
-	tc, cancel := context.WithTimeout(ctx, 10*time.Second)
-
-	defer func() {
-		fsPool.Put(fs)
-		cancel()
-	}()
-
-	fs.WithOption(SetupFS(tc))
-
-	ctx.FileFromFS(song.Path, fs)
+	ctx.Redirect(302, "/gateway/"+song.Path)
 }

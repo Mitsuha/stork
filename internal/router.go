@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/mitsuha/stork/internal/services/albums"
 	"github.com/mitsuha/stork/internal/services/artists"
+	"github.com/mitsuha/stork/internal/services/gateway"
 	"github.com/mitsuha/stork/internal/services/interaction"
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
@@ -112,6 +113,12 @@ func Run() error {
 
 		r.PUT("/queue/state", service.UpdateState)
 		r.PUT("/queue/playback-status", service.PlaybackStatus)
+	}
+
+	{
+		service := gateway.New()
+		router := engine.Group("gateway")
+		router.GET(":filename", service.File)
 	}
 
 	//engine.NoRoute(reverseProxy.New())
