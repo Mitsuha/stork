@@ -24,6 +24,10 @@ func ApplyQueries(g *gen.Generator) {
 
 	g.ApplyInterface(func(QueueStateQueries) {}, QueueState{})
 
+	g.ApplyInterface(func(PlaylistQueries) {}, Playlist{})
+
+	g.ApplyInterface(func(PlaylistSongQueries) {}, PlaylistSong{})
+
 	g.ApplyInterface(func(InteractionQueries) {}, Interaction{})
 }
 
@@ -112,6 +116,16 @@ type SongQueries interface {
 type QueueStateQueries interface {
 	//WhereUser SELECT * FROM @@table WHERE user_id = @uid
 	WhereUser(uid int) (*gen.T, error)
+}
+
+type PlaylistQueries interface {
+	//DeleteWhereUser DELETE FROM @@table WHERE user_id = @uid AND id = @id
+	DeleteWhereUser(uid int, id int) (gen.RowsAffected, error)
+}
+
+type PlaylistSongQueries interface {
+	//DeleteWherePlaylist DELETE FROM @@table WHERE playlist_id = @pid
+	DeleteWherePlaylist(pid int) (gen.RowsAffected, error)
 }
 
 type InteractionQueries interface {

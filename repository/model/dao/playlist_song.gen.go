@@ -172,6 +172,7 @@ type IPlaylistSongDo interface {
 	FindAll() (result []*model.PlaylistSong, err error)
 	FindByID(id int) (result *model.PlaylistSong, err error)
 	FindByUserID(uid int) (result []*model.PlaylistSong, err error)
+	DeleteWherePlaylist(pid int) (rowsAffected int64, err error)
 }
 
 // FindAll SELECT * FROM @@table
@@ -211,6 +212,22 @@ func (p playlistSongDo) FindByUserID(uid int) (result []*model.PlaylistSong, err
 
 	var executeSQL *gorm.DB
 	executeSQL = p.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// DeleteWherePlaylist DELETE FROM @@table WHERE playlist_id = @pid
+func (p playlistSongDo) DeleteWherePlaylist(pid int) (rowsAffected int64, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, pid)
+	generateSQL.WriteString("DELETE FROM playlist_song WHERE playlist_id = ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = p.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
+	rowsAffected = executeSQL.RowsAffected
 	err = executeSQL.Error
 
 	return

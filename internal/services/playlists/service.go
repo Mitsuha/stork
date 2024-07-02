@@ -1,6 +1,7 @@
 package playlists
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	v1 "github.com/mitsuha/stork/api/v1"
 	"github.com/mitsuha/stork/internal/services/overview"
@@ -56,7 +57,7 @@ func (p *Playlist) Create(ctx *gin.Context) {
 }
 
 func (p *Playlist) Songs(ctx *gin.Context) {
-	var req PlaylistSongsReq
+	var req PlaylistReq
 	if err := ctx.BindUri(&req); err != nil {
 		ctx.JSON(400, v1.BadRequest)
 		return
@@ -74,17 +75,12 @@ func (p *Playlist) Update(ctx *gin.Context) {
 	user := authentication.User(ctx)
 
 	var req UpdateReq
-	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(400, v1.BadRequest)
-		return
-	}
-	var idReq PlaylistSongsReq
-	if err := ctx.BindUri(&idReq); err != nil {
+	if err := req.Bind(ctx); err != nil {
 		ctx.JSON(400, v1.BadRequest)
 		return
 	}
 
-	playlist, err := dao.Playlist.WithContext(ctx).FindByID(idReq.ID)
+	playlist, err := dao.Playlist.WithContext(ctx).FindByID(req.ID)
 	if err != nil {
 		ctx.JSON(500, v1.NotFound)
 		return
@@ -94,8 +90,7 @@ func (p *Playlist) Update(ctx *gin.Context) {
 		return
 	}
 
-	_, err = dao.Playlist.WithContext(ctx).Where(dao.Playlist.ID.Eq(idReq.ID)).Updates(req.ToMap())
-	if err != nil {
+	if _, err = dao.Playlist.WithContext(ctx).Where(dao.Playlist.ID.Eq(req.ID)).Updates(req.ToMap()); err != nil {
 		ctx.JSON(500, v1.ServerError)
 		return
 	}
@@ -103,4 +98,76 @@ func (p *Playlist) Update(ctx *gin.Context) {
 	playlist.Name = req.Name
 
 	ctx.JSON(200, playlist)
+}
+
+func (p *Playlist) Delete(ctx *gin.Context) {
+	user := authentication.User(ctx)
+
+	var req PlaylistReq
+	if err := ctx.BindUri(&req); err != nil {
+		ctx.JSON(400, v1.BadRequest)
+		return
+	}
+
+	playlist, err := dao.Playlist.WithContext(ctx).FindByID(req.ID)
+	if err != nil {
+		ctx.JSON(500, v1.NotFound)
+		return
+	}
+	if playlist.UserID != user.ID {
+		ctx.JSON(403, v1.Forbidden)
+		return
+	}
+
+	if _, err := dao.Playlist.WithContext(ctx).DeleteWhereUser(user.ID, req.ID); err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	if _, err := dao.PlaylistSong.WithContext(ctx).DeleteWherePlaylist(req.ID); err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+}
+
+func (p *Playlist) AddSong(ctx *gin.Context) {
+	var req AssociateActionReq
+	if err := req.Bind(ctx); err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	_, err := dao.PlaylistSong.WithContext(ctx).Where(dao.PlaylistSong.PlaylistID.Eq(req.ID)).Where(dao.PlaylistSong.SongID.In(req.Songs...)).Delete()
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	ps := make([]*model.PlaylistSong, len(req.Songs))
+	for i, song := range req.Songs {
+		ps[i] = &model.PlaylistSong{
+			PlaylistID: req.ID,
+			SongID:     song,
+		}
+	}
+	fmt.Println(ps)
+
+	if err := dao.PlaylistSong.WithContext(ctx).Create(ps...); err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+}
+
+func (p *Playlist) RemoveSongs(ctx *gin.Context) {
+	var req AssociateActionReq
+	if err := req.Bind(ctx); err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
+
+	_, err := dao.PlaylistSong.WithContext(ctx).Where(dao.PlaylistSong.PlaylistID.Eq(req.ID)).Where(dao.PlaylistSong.SongID.In(req.Songs...)).Delete()
+	if err != nil {
+		ctx.JSON(500, v1.ServerError)
+		return
+	}
 }

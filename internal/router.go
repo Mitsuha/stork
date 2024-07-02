@@ -11,7 +11,6 @@ import (
 	"github.com/mitsuha/stork/internal/services/overview"
 	"github.com/mitsuha/stork/internal/services/playlists"
 	"github.com/mitsuha/stork/internal/services/queue"
-	"github.com/mitsuha/stork/internal/services/reverseProxy"
 	"github.com/mitsuha/stork/internal/services/songs"
 	"github.com/mitsuha/stork/internal/services/users"
 	customValidator "github.com/mitsuha/stork/internal/validator"
@@ -100,8 +99,12 @@ func Run() error {
 		service := playlists.New()
 
 		r.POST("/playlists", service.Create)
-		r.GET("/playlists/:id/songs", service.Songs)
 		r.PUT("/playlists/:id", service.Update)
+		r.DELETE("/playlists/:id", service.Delete)
+
+		r.GET("/playlists/:id/songs", service.Songs)
+		r.POST("/playlists/:id/songs", service.AddSong)
+		r.DELETE("/playlists/:id/songs", service.RemoveSongs)
 	}
 
 	{
@@ -111,7 +114,7 @@ func Run() error {
 		r.PUT("/queue/playback-status", service.PlaybackStatus)
 	}
 
-	engine.NoRoute(reverseProxy.New())
+	//engine.NoRoute(reverseProxy.New())
 
 	return engine.Run()
 }

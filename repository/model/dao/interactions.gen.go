@@ -287,14 +287,14 @@ func (i interactionDo) FindByUserSong(uid int, sid string) (result *model.Intera
 	return
 }
 
-// IncPlayCount UPDATE interactions SET play_count = play_count + 1 WHERE user_id = @uid AND song_id = @sid
+// IncPlayCount UPDATE interactions SET play_count = play_count + 1 last_played_at = NOW() WHERE user_id = @uid AND song_id = @sid
 func (i interactionDo) IncPlayCount(uid int, sid string) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, uid)
 	params = append(params, sid)
-	generateSQL.WriteString("UPDATE interactions SET play_count = play_count + 1 WHERE user_id = ? AND song_id = ? ")
+	generateSQL.WriteString("UPDATE interactions SET play_count = play_count + 1 last_played_at = NOW() WHERE user_id = ? AND song_id = ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = i.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
