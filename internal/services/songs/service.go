@@ -30,11 +30,6 @@ const (
 	RecentlyPlayedCount = 128
 )
 
-var (
-	unknownArtist = &model.Artist{Name: "Unknown Artist"}
-	unknownAlbum  = &model.Album{Name: "Unknown Album"}
-)
-
 func New() *Songs {
 	return &Songs{}
 }
