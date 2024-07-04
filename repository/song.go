@@ -14,23 +14,30 @@ func NewSongs(ctx context.Context) *Songs {
 	return &Songs{ctx: ctx}
 }
 
-func (s *Songs) Create(song *model.Song) error {
-	if song.Artist != nil {
-		artist, err := NewArtists(s.ctx).FindOrCreate(song.Artist)
+func (s *Songs) Create(song *model.Song, artist *model.Artist, album *model.Album) error {
+	if artist != nil {
+		artist, err := NewArtists(s.ctx).FindOrCreate(artist)
 		if err != nil {
 			return err
 		}
 		song.Artist, song.ArtistID = artist, artist.ID
 	}
 
-	if song.Album != nil {
-		song.Album.ArtistID = song.ArtistID
+	if album != nil {
+		album.ArtistID = song.ArtistID
 
-		album, err := NewAlbums(s.ctx).FindOrCreate(song.Album)
+		na, err := NewAlbums(s.ctx).FindOrCreate(album)
 		if err != nil {
 			return err
 		}
-		song.Album, song.AlbumID, song.Album.Artist = album, album.ID, song.Artist
+
+		*album = *na
+
+		song.Album, song.AlbumID = album, album.ID
+
+		if artist != nil {
+			song.Album.Artist = artist
+		}
 	}
 	return dao.Song.WithContext(s.ctx).Create(song)
 }

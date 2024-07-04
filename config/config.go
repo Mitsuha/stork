@@ -7,7 +7,8 @@ import (
 )
 
 type config struct {
-	Mysql *mysql `json:"mysql" yaml:"mysql"`
+	Mysql  *mysql  `json:"mysql" yaml:"mysql"`
+	Lastfm *lastfm `json:"lastfm" yaml:"lastfm"`
 }
 
 func Load(path string) error {
@@ -42,4 +43,5 @@ func getFileContent(path string) (string, error) {
 
 func overwrite(c *config) {
 	Mysql = c.Mysql
+	Lastfm = c.Lastfm
 }

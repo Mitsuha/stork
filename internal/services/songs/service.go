@@ -7,19 +7,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/ipfs/boxo/files"
 	"github.com/mitsuha/stork/api/v1"
+	"github.com/mitsuha/stork/config"
 	"github.com/mitsuha/stork/internal/container"
 	"github.com/mitsuha/stork/internal/services/overview"
+	mdService "github.com/mitsuha/stork/internal/services/songs/metadata"
 	"github.com/mitsuha/stork/pkg/audio"
 	"github.com/mitsuha/stork/pkg/authentication"
 	"github.com/mitsuha/stork/pkg/ipfs"
+	"github.com/mitsuha/stork/pkg/lastfm"
 	"github.com/mitsuha/stork/pkg/paginate"
 	"github.com/mitsuha/stork/repository"
 	"github.com/mitsuha/stork/repository/model"
 	"github.com/mitsuha/stork/repository/model/dao"
 	"io"
 	"net/url"
-	"path/filepath"
-	"strings"
 )
 
 type Songs struct {
@@ -89,45 +90,21 @@ func (s *Songs) Upload(ctx *gin.Context) {
 		return
 	}
 
-	var artist, album = unknownArtist, unknownAlbum
-	var song *model.Song
-
-	if metadata.HasTag() {
-		artist = &model.Artist{
-			Name: metadata.Artist(),
-		}
-		album = &model.Album{
-			Name:  metadata.Album(),
-			Cover: "",
-		}
-
-		song = &model.Song{
-			ID:     uuid.NewString(),
-			Title:  metadata.Title(),
-			Year:   metadata.Year(),
-			Genre:  metadata.Genre(),
-			Track:  metadata.Track(),
-			Disc:   metadata.Track(),
-			Length: metadata.Duration(),
-			Path:   path.RootCid().String(),
-			Album:  album,
-			Artist: artist,
-		}
-	} else {
-		title, _ := url.QueryUnescape(req.File.Filename)
-
-		title = strings.TrimSuffix(title, filepath.Ext(title))
-
-		song = &model.Song{
-			Title:  title,
-			Length: metadata.Duration(),
-			Path:   path.RootCid().String(),
-			Album:  album,
-			Artist: artist,
-		}
+	song := &model.Song{
+		ID:     uuid.New().String(),
+		Length: metadata.Duration(),
+		Path:   path.RootCid().String(),
 	}
 
-	if err := repository.NewSongs(ctx).Create(song); err != nil {
+	var lfm *lastfm.Lastfm
+	if config.Lastfm.Enable {
+		lfm = lastfm.New(config.Lastfm.APIKey, config.Lastfm.Secret)
+	}
+
+	fName, _ := url.QueryUnescape(req.File.Filename)
+	artist, album := mdService.New(lfm).Retrieve(song, fName, metadata)
+
+	if err := repository.NewSongs(ctx).Create(song, artist, album); err != nil {
 		ctx.JSON(500, errors.Join(v1.ServerError, err))
 		return
 	}
